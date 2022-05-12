@@ -1,0 +1,415 @@
+﻿@page "/importexcel"
+@using System 
+@using System.IO
+@using NPOI.XSSF
+@using NPOI.XSSF.UserModel
+@using NPOI.SS.UserModel
+@using EntTorgMaster.Data
+@using EntTorgMaster.Helpers
+@using AutoMapper
+
+@inject IMapper mapper
+
+<h3>ImportExcel</h3>
+
+<Button Clicked=Save Size=Size.Small Color=Color.Success>Сохранить</Button>
+<Button Size=Size.Small Color=Color.Danger>Отмена</Button>
+<Alert @ref=@errorAlert Color=Color.Danger>
+    <AlertMessage>
+        @errors
+    </AlertMessage>
+</Alert>
+<Field Class="mb-3">
+    <FileEdit Changed="@ImportFile"/>
+</Field>
+
+<div Class="row g-3 align-content-center mb-3">
+    <div class="col-auto">
+        <Label>Счет</Label>
+    </div>
+    <div class="col-auto">
+        <TextEdit @bind-Text="@order.Shet" />
+    </div>
+    <div class="col-auto">
+        <Label>Дата</Label>
+    </div>
+    <div class="col-auto">
+        <DateEdit @bind-Date="@order.ShetDate"/>
+    </div>
+</div>
+
+<Table Responsive=true Bordered=true Narrow=true>
+    <TableHeader>
+        <TableRow>
+            <TableHeaderCell RowSpan=2>#</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Наименование</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Кол-во</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Ширина</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Высота</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Открывание</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Раб. ств.</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>RAL</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Наличник</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Доводчик</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Прим</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Марк</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Шильда</TableHeaderCell>
+            <TableHeaderCell ColumnSpan=2>Навесы</TableHeaderCell>
+            <TableHeaderCell ColumnSpan=2>Окно</TableHeaderCell>
+            <TableHeaderCell ColumnSpan=2>Фрамуга</TableHeaderCell>
+            <TableHeaderCell RowSpan=2></TableHeaderCell>
+        </TableRow>
+        <TableRow>
+            <TableHeaderCell>Раб.</TableHeaderCell>
+            <TableHeaderCell>Вт.</TableHeaderCell>
+            <TableHeaderCell>Раб.</TableHeaderCell>
+            <TableHeaderCell>Вт.</TableHeaderCell>
+            <TableHeaderCell>Наличие</TableHeaderCell>
+            <TableHeaderCell>Высота</TableHeaderCell>
+        </TableRow>
+    </TableHeader>
+    <TableBody>
+        @foreach (OrderModelDoor door in order.OrderDoors)
+        {
+            <TableRow>
+                <TableRowCell>@(door.Position)</TableRowCell>
+                <TableRowCell>
+                    <Select TValue=string SelectedValue="@door.Name" @onchange="@((e)=> door.Name=(string)e.Value)">
+                        @foreach(string name in doorNames)
+                    {
+                        <SelectItem Value="@name">@name</SelectItem>
+                    }
+                    @if (doorNames.IndexOf(door.Name) == -1)
+                    {
+                        <SelectItem Value="@door.Name">@door.Name</SelectItem>
+                    }
+                </Select>
+                @if (doorNames.IndexOf(door.Name) == -1)
+                    {
+                        <Icon Name="IconName.ExclamationTriangle" TextColor="TextColor.Danger" />
+                    }
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind-value="@door.Count" style="width: 50px"/>
+                    @if (door.Count == null)
+                    {
+                        <Icon Name="IconName.ExclamationTriangle" TextColor="TextColor.Danger" />
+                    }
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind="@door.H" style="width: 70px"/>
+                    @if (door.H == null)
+                    {
+                        <Icon Name="IconName.ExclamationTriangle" TextColor="TextColor.Danger" />
+                    }
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind="@door.W" style="width: 70px" />
+                    @if (door.W == null)
+                    {
+                        <Icon Name="IconName.ExclamationTriangle" TextColor="TextColor.Danger" />
+                    }
+                </TableRowCell>
+                <TableRowCell>
+                    <Select TValue=OpenModelType SelectedValue="@door.Open" SelectedValueChanged="(e)=>door.Open=e">
+                        @foreach (Enum opentype in Enum.GetValues(typeof(OpenModelType)))
+                        {
+                            <SelectItem value="@opentype">@opentype.GetEnumDescription()</SelectItem>
+                        }
+                    </Select>
+                @if (door.Open == OpenModelType.None)
+                    {
+                        <Icon Name="IconName.ExclamationTriangle" TextColor="TextColor.Danger" />
+                    }
+                </TableRowCell>
+                <TableRowCell class="d-inline-flex">
+                    <Check TValue="bool" @bind-Checked="door.SEqual" @onchange="@(()=>{door.S=null; door.SEqual=!door.SEqual;})"/>
+                    <input @bind-value="door.S" disabled=@(door.SEqual) style="width: 50px"/>
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind="door.Ral" style="width: 100px"/>
+                </TableRowCell>
+                <TableRowCell>
+                    <Select TValue=NalichnikModelType @bind-SelectedValue=door.Nalichnik>
+                        @foreach(Enum nalichnikType in Enum.GetValues<NalichnikModelType>())
+                    {
+                        <SelectItem Value=nalichnikType>@nalichnikType.GetEnumDescription()</SelectItem>
+                    }
+                    </Select>
+                    <Icon Name="IconName.ExclamationTriangle" TextColor="TextColor.Danger" style="@(door.Nalichnik==NalichnikModelType.None ? "" : "display:none")"/>
+                </TableRowCell>
+                <TableRowCell>
+                    <Select TValue=DovodModelType @bind-SelectedValue=door.Dovod>
+                        @foreach(Enum dovodType in Enum.GetValues<DovodModelType>())
+                    {
+                        <SelectItem Value=dovodType>@dovodType.GetEnumDescription()</SelectItem>
+                    }
+                    </Select>
+                    <Icon Name="IconName.ExclamationTriangle" TextColor="TextColor.Danger" style="@(door.Dovod==DovodModelType.None ? "": "display:none")" />
+                </TableRowCell>
+                <TableRowCell>
+                    <Button Type=ButtonType.Button @onclick="@(()=>{doorSelected=door; modalNote.Show(); })" Class="btn-sm btn-outline-primary">
+                    @if (door.Note != "")
+                        {
+                            <Icon Name="IconName.ExclamationTriangle" TextColor="TextColor.Danger"/>
+                        }
+                        else
+                        {
+                            <span>&nbsp;</span>
+                        }
+                    </Button>
+                </TableRowCell>
+                <TableRowCell>
+                    <Button Type=ButtonType.Button @onclick="@(()=>{doorSelected=door; modalMarking.Show(); })" Class="btn-sm btn-outline-primary">
+                    @if (door.Marking != "")
+                        {
+                            <Icon Name="IconName.ExclamationTriangle" TextColor="TextColor.Danger"/>
+                        }
+                        else
+                        {
+                            <span>&nbsp;</span>
+                        }
+                    </Button>
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind=door.Shild  style="width: 100px"/>
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind="door.NavesCount" style="width: 50px"/>
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind="door.NavesStvorkaCount" style="width: 50px"/>
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind="door.WindowCount" style="width: 50px"/>
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind="door.WindowStvorkaCount" style="width: 50px"/>
+                </TableRowCell>
+                <TableRowCell>
+                    <input type="checkbox" @onchange=@((e)=>{door.Framuga=(bool)e.Value; door.FramugaH=null;})/>
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind="door.FramugaH" disabled=@door.Framuga style="width: 50px"/>
+                </TableRowCell>
+            </TableRow>
+        }
+    </TableBody>
+</Table>
+
+<Field Horizontal>
+    <FieldLabel ColumnSize=ColumnSize.Is2>Заказчик</FieldLabel>
+    <FieldBody ColumnSize=ColumnSize.Is10>
+        <TextEdit Size=Size.Small Text=@order.CustomerName/>
+    </FieldBody>
+</Field>
+<Field Horizontal>
+    <FieldLabel ColumnSize=ColumnSize.Is2>Контакты</FieldLabel>
+    <FieldBody ColumnSize=ColumnSize.Is10>
+        <TextEdit Size=Size.Small Text=@order.CustomerPhone/>
+    </FieldBody>
+</Field>
+
+<MemoEdit Size=Size.Small Rows=5 Text=@order.Note/>
+
+<Modal @ref="modalNote">
+    <ModalContent Centered>
+        <ModalBody>
+            <MemoEdit Rows=5 @bind-Text=@doorSelected.Note />
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Primary" Clicked="@(()=>modalNote.Hide())">Закрыть</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Modal @ref="modalMarking">
+    <ModalContent Centered>
+        <ModalBody>
+            <MemoEdit Rows=5 @bind-Text=@doorSelected.Marking />
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Primary" Clicked="@(()=>modalMarking.Hide())">Закрыть</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+    List<string> doorNames = new() { "Ворота", "Дверь метал", "Дверь межк" };
+    OrderModel order = new() { DateCreate = DateOnly.FromDateTime(DateTime.Now) };
+
+    StringBuilder errors = new();
+    Alert errorAlert;
+
+    OrderModelDoor doorSelected = new();
+
+    private Modal modalNote;
+    private Modal modalMarking;
+
+    private async Task ImportFile(FileChangedEventArgs e)
+    {
+        var file=e.Files.FirstOrDefault();
+        if (file != null)
+        {
+            var filename = file?.Name;
+            var fileext = filename.Substring(filename.IndexOf("."));
+            var path = Path.Combine(Environment.CurrentDirectory, "uploads", Guid.NewGuid() + fileext);
+
+            await using FileStream fs = new(path, FileMode.Create);
+            await file.OpenReadStream().CopyToAsync(fs);
+            fs.Close();
+            using FileStream fs1 = new FileStream(path, FileMode.Open);
+
+            XSSFWorkbook workbook = new XSSFWorkbook(fs1);
+            var sheet = workbook.GetSheetAt(0);
+            int cellCount = sheet.LastRowNum;
+            for (int r = 8; r <= sheet.LastRowNum; r++)
+                if (sheet.GetRow(r).GetCell(0)?.NumericCellValue != 0 & sheet.GetRow(r).GetCell(1)!=null)
+                {
+                    var row = sheet.GetRow(r);
+                    string doorName = sheet.GetRow(r).GetCell(1)?.StringCellValue;
+                    int count = int.Parse(sheet.GetRow(r).GetCell(2).NumericCellValue.ToString());
+                    int h = int.Parse(sheet.GetRow(r).GetCell(3).NumericCellValue.ToString());
+                    int w = int.Parse(sheet.GetRow(r).GetCell(4).NumericCellValue.ToString());
+                    string openstr = sheet.GetRow(r).GetCell(5).StringCellValue;
+                    OpenModelType open=OpenModelType.None;
+                    if (openstr.ToLower().IndexOf("лев") > -1)
+                        open = OpenModelType.Left;
+                    if (openstr.ToLower().IndexOf("прав") > -1)
+                        open = OpenModelType.Right;
+                    bool sequal = false;
+                    int? s = null;
+                    var cellS = sheet.GetRow(r).GetCell(6);
+                    switch (cellS.CellType)
+                    {
+                        case NPOI.SS.UserModel.CellType.String:
+                            if (cellS.StringCellValue.ToLower().IndexOf("равн") > -1)
+                                sequal = true;
+                            if(int.TryParse(cellS.StringCellValue,  out var s_1))
+                                s = s_1;
+                            break;
+                        case NPOI.SS.UserModel.CellType.Numeric:
+                            if(int.TryParse(cellS.NumericCellValue.ToString(),  out var s_2))
+                                s = s_2;
+                            break;
+                    }
+                    string ral = "";
+                    switch (row.GetCell(7).CellType)
+                    {
+                        case CellType.Numeric:
+                            ral = row.GetCell(7).NumericCellValue.ToString();
+                            break;
+                        case CellType.String:
+                            ral = row.GetCell(7).StringCellValue;
+                            break;
+                    }
+                    NalichnikModelType nalichnik = NalichnikModelType.None;
+                    switch (row.GetCell(8).StringCellValue.ToLower().Trim())
+                    {
+                        case "да":
+                            nalichnik = NalichnikModelType.Yes;
+                            break;
+                        case "нет":
+                            nalichnik = NalichnikModelType.No;
+                            break;
+                        case "да с 4-х сторон":
+                            nalichnik = NalichnikModelType.Yes4;
+                            break;
+                    }
+                    DovodModelType dovod = DovodModelType.None;
+                    switch (row.GetCell(9).StringCellValue.ToLower().Trim())
+                    {
+                        case "да":
+                            dovod = DovodModelType.Yes;
+                            break;
+                        case "нет":
+                            dovod = DovodModelType.No;
+                            break;
+                        case "нет, подготовка":
+                            dovod = DovodModelType.NoPrepare;
+                            break;
+                    }
+                    string note = "";
+                    if (row.GetCell(18).CellType != CellType.Blank)
+                        note = row.GetCell(18).StringCellValue;
+                    string marjing = "";
+                    if (row.GetCell(20).CellType != CellType.Blank)
+                        note = row.GetCell(20).StringCellValue;
+                    string shild = "";
+                    switch (row.GetCell(19).CellType)
+                    {
+                        case CellType.String:
+                            shild = row.GetCell(19).StringCellValue;
+                            break;
+                        case CellType.Numeric:
+                            shild = row.GetCell(19).NumericCellValue.ToString();
+                            break;
+                    }
+                    int? navesCount=null;
+                    if (row.GetCell(10).CellType == CellType.Numeric)
+                        navesCount = int.Parse(row.GetCell(10).NumericCellValue.ToString());
+                    int? navesStvorkaCount=null;
+                    if (row.GetCell(11).CellType == CellType.Numeric)
+                        navesStvorkaCount = int.Parse(row.GetCell(11).NumericCellValue.ToString());
+                    int? windowCount=null;
+                    if (row.GetCell(12).CellType == CellType.Numeric)
+                        windowCount = int.Parse(row.GetCell(12).NumericCellValue.ToString());
+                    int? windowStvorkaCount=null;
+                    if (row.GetCell(13).CellType == CellType.Numeric)
+                        windowStvorkaCount = int.Parse(row.GetCell(13).NumericCellValue.ToString());
+                    bool framug=false;
+                    if (row.GetCell(14).CellType == CellType.String && row.GetCell(14).StringCellValue.ToLower() == "да")
+                        framug = true;
+                    int? framugH=null;
+                    if (row.GetCell(15).CellType == CellType.Numeric)
+                        windowStvorkaCount = int.Parse(row.GetCell(15).NumericCellValue.ToString());
+                    order.OrderDoors.Add(new OrderModelDoor
+                    {
+                        Position=int.Parse(sheet.GetRow(r).GetCell(0)?.NumericCellValue.ToString()),
+                        Name=doorName,
+                        Count=count,
+                        H=h,
+                        W=w,
+                        Open=open,
+                        SEqual=sequal,
+                        S=s,
+                        Ral=ral,
+                        Nalichnik=nalichnik,
+                        Dovod=dovod,
+                        Note=note,
+                        Marking=marjing,
+                        Shild=shild,
+                        NavesCount=navesCount,
+                        NavesStvorkaCount=navesStvorkaCount,
+                        WindowCount=windowCount,
+                        WindowStvorkaCount=windowCount,
+                        Framuga=framug,
+                        FramugaH=framugH
+                    });
+                }
+        }
+    }
+
+    private async Task Save()
+    {
+        errors.Clear();
+        if (order.Shet==null || order.Shet == String.Empty)
+            errors.AppendLine("Поле счет не заполнен");
+        if (order.ShetDate == null)
+            errors.AppendLine("Поле дата счета не заполнен");
+        var errorPosistions = order.OrderDoors.Where( p=>
+     doorNames.IndexOf(p.Name)==-1 || p.W==null || p.H==null || p.Open==OpenModelType.None
+        ).ToList();
+        foreach (var pos in errorPosistions)
+            errors.AppendLine($"В позиции {pos.Position} заполнены не все поля");
+        errors = errors.Replace("\n", " ");
+        if (errors.Length != 0)
+        {
+            errorAlert.Show();
+            return;
+        }
+        var o= mapper.Map<Order>(order);
+        Console.WriteLine(o);
+    }
+}
+

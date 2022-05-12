@@ -1,0 +1,19 @@
+﻿@page "/doortypes"
+@inject IDbContextFactory<enttorgsnabContext> dbFactory1
+
+<h3>DoorTypePage</h3>
+
+@foreach(var doorType in doorTypes)
+{
+    <p>@doorType.Name</p>
+}
+
+@code {
+    IEnumerable<DoorType> doorTypes;
+    DoorTypesRepository repository;
+    protected override async Task OnInitializedAsync()
+    {
+        repository = new DoorTypesRepository(dbFactory1.CreateDbContext());
+        doorTypes =await repository.GetDoorTypes();
+    }
+}

@@ -1,0 +1,12 @@
+﻿@page "/order-edit"
+@using EntTorgMaster.Services
+@inject IJSRuntime js
+
+<h3>OrderEdit</h3>
+<Button Clicked="@(()=>{PDFGenerate.GenerateNaryad(js);})" Class="btn-sm btn-primary">Печать</Button>
+
+
+
+@code {
+    
+}

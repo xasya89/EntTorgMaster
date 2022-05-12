@@ -1,0 +1,31 @@
+﻿@page "/counter"
+@using System.ComponentModel.DataAnnotations
+
+<PageTitle>Counter</PageTitle>
+
+<EditForm Model="@exampleModel" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+
+    <input id="name" @bind="exampleModel.H" />
+
+    <button type="submit">Submit</button>
+</EditForm>
+
+@code {
+    private ExampleModel exampleModel = new ExampleModel();
+
+    private void HandleValidSubmit()
+    {
+        Console.WriteLine("HandleValidSubmit called");
+
+        // Process the valid form
+    }
+    public class ExampleModel
+    {
+        [Required]
+        [StringLength(10, ErrorMessage = "Name is too long.")]
+        public string Name { get; set; }
+        [Required]
+        public int? H{ get; set; }
+    }
+}
