@@ -1,19 +1,58 @@
 ﻿@page "/doortypes"
 @inject IDbContextFactory<enttorgsnabContext> dbFactory1
+@implements IDisposable
 
 <h3>DoorTypePage</h3>
 
-@foreach(var doorType in doorTypes)
+<Fields onshow Margin=Margin.Is2>
+    <Field>
+        <TextEdit @bind-Text=newDoorType Placeholder="Новая дверь"/>
+    </Field>
+    <Field>
+        <Button @onclick=@(()=>{ }) Size=Size.Small Color=Color.Primary>Добавить</Button>
+    </Field>
+</Fields>
+
+<ListGroup Flush>
+    @foreach(var doorType in doorTypes?? new List<DoorType>())
+    {
+        <ListGroupItem Flex="Flex.JustifyContent.Between.AlignItems.Center">
+            <input value=@doorType.Name @onchange=@((e)=>Edit(doorType, (string)e.Value)) class="form-control form-control-sm"/>
+            <Icon @onclick=@(async ()=>{ await repository.DeleteTypeDoorAsync(doorType); doorTypes.Remove(doorType); }) Name="IconName.Delete" TextColor="TextColor.Danger"/>
+        </ListGroupItem>
+    }
+</ListGroup>
+
+@foreach(var doorType in doorTypes?? new List<DoorType>())
 {
     <p>@doorType.Name</p>
 }
 
 @code {
-    IEnumerable<DoorType> doorTypes;
+    string newDoorType = "";
+    List<DoorType> doorTypes;
     DoorTypesRepository repository;
     protected override async Task OnInitializedAsync()
     {
         repository = new DoorTypesRepository(dbFactory1.CreateDbContext());
-        doorTypes =await repository.GetDoorTypes();
+        doorTypes =(await repository.GetDoorTypesAsync()).ToList();
+    }
+
+    private async Task Add()
+    {
+        var newdoor = await repository.AddDoorTypeAsync(newDoorType);
+        if (newdoor != null)
+            doorTypes.Insert(0, newdoor);
+    }
+
+    private async Task Edit(DoorType doorType, string newname)
+    {
+        doorType.Name = newname;
+        await repository.EditDoorTypeAsync(doorType);
+    }
+
+    public void Dispose()
+    {
+        repository.Dispose();
     }
 }
