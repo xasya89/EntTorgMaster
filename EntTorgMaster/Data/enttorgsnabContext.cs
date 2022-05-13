@@ -8,6 +8,8 @@ namespace EntTorgMaster.Data
     public partial class enttorgsnabContext : DbContext
     {
         public DbSet<DoorType> DoorTypes { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderDoor> OrderDoors { get; set; }
         public enttorgsnabContext()
         {
         }
@@ -30,6 +32,15 @@ namespace EntTorgMaster.Data
         {
             modelBuilder.UseCollation("utf8_unicode_ci")
                 .HasCharSet("utf8mb3");
+
+            modelBuilder.Entity<OrderDoor>()
+                .HasOne(d => d.Order)
+                .WithMany(o => o.OrderDoors)
+                .HasForeignKey(d => d.OrderId);
+            modelBuilder.Entity<OrderDoor>()
+                .HasOne(d => d.DoorType)
+                .WithMany(d => d.OrderDoors)
+                .HasForeignKey(d => d.DoorTypeId);
 
             OnModelCreatingPartial(modelBuilder);
         }

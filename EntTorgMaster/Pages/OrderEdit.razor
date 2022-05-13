@@ -1,12 +1,295 @@
-﻿@page "/order-edit"
+﻿@page "/order-edit/{idOrder}"
+@page "/order-edit"
 @using EntTorgMaster.Services
+@using EntTorgMaster.Helpers
 @inject IJSRuntime js
+@inject IDbContextFactory<enttorgsnabContext> dbFactory
+@inject NavigationManager NavigationManager
+@implements IDisposable
 
-<h3>OrderEdit</h3>
-<Button Clicked="@(()=>{PDFGenerate.GenerateNaryad(js);})" Class="btn-sm btn-primary">Печать</Button>
+<Field Style="margin-bottom: 10px">
+    <Button Clicked=save Size=Size.Small Color=Color.Success>Сохранить</Button>
+    <Button Size=Size.Small Color=Color.Primary>Закрыть</Button>
+    <Button Size=Size.Small Color=Color.Danger style="margin: 0 10px">Удалить</Button>
+    <Button Clicked="@(()=>{PDFGenerate.GenerateNaryad(js);})" Class="btn-sm btn-primary">Печать</Button>
+</Field>
+<Alert @ref=@errorAlert Color=Color.Danger>
+    <AlertMessage>
+        @errors
+    </AlertMessage>
+</Alert>
 
+<div Class="row g-3 align-content-center mb-3">
+    <div class="col-auto">
+        <Label>Счет</Label>
+    </div>
+    <div class="col-auto">
+        <TextEdit @bind-Text="@order.Shet" />
+    </div>
+    <div class="col-auto">
+        <Label>Дата</Label>
+    </div>
+    <div class="col-auto">
+        <DateEdit @bind-Date="@order.ShetDate"/>
+    </div>
+</div>
 
+<Table Responsive=true Bordered=true Narrow=true>
+    <TableHeader>
+        <TableRow>
+            <TableHeaderCell RowSpan=2>
+                <Button 
+                    Clicked="@(()=>{order.OrderDoors.Add(new OrderDoor{Position=order.OrderDoors.Count+1, DoorTypeId=doorNames.FirstOrDefault().Id}); })" 
+                    Size=Size.Small Color=Color.Primary>
+                    <Icon Name="IconName.Add" TextColor=TextColor.White/>
+                </Button>
+            </TableHeaderCell>
+            <TableHeaderCell RowSpan=2>#</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Наименование</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Кол-во</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Ширина</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Высота</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Открывание</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Раб. ств.</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>RAL</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Наличник</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Доводчик</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Прим</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Марк</TableHeaderCell>
+            <TableHeaderCell RowSpan=2>Шильда</TableHeaderCell>
+            <TableHeaderCell ColumnSpan=2>Навесы</TableHeaderCell>
+            <TableHeaderCell ColumnSpan=2>Окно</TableHeaderCell>
+            <TableHeaderCell ColumnSpan=2>Фрамуга</TableHeaderCell>
+            <TableHeaderCell RowSpan=2></TableHeaderCell>
+        </TableRow>
+        <TableRow>
+            <TableHeaderCell>Раб.</TableHeaderCell>
+            <TableHeaderCell>Вт.</TableHeaderCell>
+            <TableHeaderCell>Раб.</TableHeaderCell>
+            <TableHeaderCell>Вт.</TableHeaderCell>
+            <TableHeaderCell>Наличие</TableHeaderCell>
+            <TableHeaderCell>Высота</TableHeaderCell>
+        </TableRow>
+    </TableHeader>
+    <TableBody>
+        @foreach (OrderDoor door in order.OrderDoors)
+        {
+            <TableRow>
+                <TableRowCell>
+                    <Dropdown>
+                        <DropdownToggle Color="Color.Primary" Size=Size.Small>
+                            <Icon Name=IconName.Bars TextColor=TextColor.White/>
+                        </DropdownToggle>
+                        <DropdownMenu>
+                            <DropdownItem Clicked=@(()=>DeletePosition(door))>Удалить</DropdownItem>
+                            <DropdownDivider />
+                            <DropdownItem>Печать</DropdownItem>
+                        </DropdownMenu>
+                    </Dropdown>
+                </TableRowCell>
+                <TableRowCell>@(door.Position)</TableRowCell>
+                <TableRowCell>
+                    <Select TValue=int SelectedValue="@door.DoorTypeId" @onchange="@((e)=> door.DoorTypeId=int.Parse((string)e.Value))">
+                        @foreach(DoorType doortype in doorNames)
+                        {
+                            <SelectItem Value="@doortype.Id">@doortype.Name</SelectItem>
+                        }
+                    </Select>
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind-value="@door.Count" style="width: 50px"/>
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind="@door.H" style="width: 70px"/>
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind="@door.W" style="width: 70px" />
+                </TableRowCell>
+                <TableRowCell>
+                    <Select TValue=OpenType SelectedValue="@door.Open" SelectedValueChanged="(e)=>door.Open=e">
+                        @foreach (Enum opentype in Enum.GetValues(typeof(OpenModelType)))
+                        {
+                            <SelectItem value="@opentype">@opentype.GetEnumDescription()</SelectItem>
+                        }
+                    </Select>
+                </TableRowCell>
+                <TableRowCell class="d-inline-flex">
+                    <Check TValue="bool" @bind-Checked="door.SEqual" @onchange="@(()=>{door.S=null; door.SEqual=!door.SEqual;})"/>
+                    <input @bind-value="door.S" disabled=@(door.SEqual) style="width: 50px"/>
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind="door.Ral" style="width: 100px"/>
+                </TableRowCell>
+                <TableRowCell>
+                    <Select TValue=NalichnikType @bind-SelectedValue=door.Nalichnik>
+                        @foreach(Enum nalichnikType in Enum.GetValues<NalichnikModelType>())
+                    {
+                        <SelectItem Value=nalichnikType>@nalichnikType.GetEnumDescription()</SelectItem>
+                    }
+                    </Select>
+                </TableRowCell>
+                <TableRowCell>
+                    <Select TValue=DovodType @bind-SelectedValue=door.Dovod>
+                        @foreach(Enum dovodType in Enum.GetValues<DovodModelType>())
+                    {
+                        <SelectItem Value=dovodType>@dovodType.GetEnumDescription()</SelectItem>
+                    }
+                    </Select>
+                </TableRowCell>
+                <TableRowCell>
+                    <Button Type=ButtonType.Button @onclick="@(()=>{doorSelected=door; modalNote.Show(); })" Class="btn-sm btn-outline-primary">
+                    @if (door.Note != "")
+                        {
+                            <Icon Name="IconName.ExclamationTriangle" TextColor="TextColor.Danger"/>
+                        }
+                        else
+                        {
+                            <span>&nbsp;</span>
+                        }
+                    </Button>
+                </TableRowCell>
+                <TableRowCell>
+                    <Button Type=ButtonType.Button @onclick="@(()=>{doorSelected=door; modalMarking.Show(); })" Class="btn-sm btn-outline-primary">
+                    @if (door.Marking != "")
+                        {
+                            <Icon Name="IconName.ExclamationTriangle" TextColor="TextColor.Danger"/>
+                        }
+                        else
+                        {
+                            <span>&nbsp;</span>
+                        }
+                    </Button>
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind=door.Shild  style="width: 100px"/>
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind="door.NavesCount" style="width: 50px"/>
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind="door.NavesStvorkaCount" style="width: 50px"/>
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind="door.WindowCount" style="width: 50px"/>
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind="door.WindowStvorkaCount" style="width: 50px"/>
+                </TableRowCell>
+                <TableRowCell>
+                    <input type="checkbox" @onchange=@((e)=>{door.Framuga=(bool)e.Value; door.FramugaH=null;})/>
+                </TableRowCell>
+                <TableRowCell>
+                    <input @bind="door.FramugaH" disabled=@door.Framuga style="width: 50px"/>
+                </TableRowCell>
+            </TableRow>
+        }
+    </TableBody>
+</Table>
+
+<Field Horizontal>
+    <FieldLabel ColumnSize=ColumnSize.Is2>Заказчик</FieldLabel>
+    <FieldBody ColumnSize=ColumnSize.Is10>
+        <TextEdit Size=Size.Small @bind-Text=@order.CustomerName/>
+    </FieldBody>
+</Field>
+<Field Horizontal>
+    <FieldLabel ColumnSize=ColumnSize.Is2>Контакты</FieldLabel>
+    <FieldBody ColumnSize=ColumnSize.Is10>
+        <TextEdit Size=Size.Small @bind-Text=@order.CustomerPhone/>
+    </FieldBody>
+</Field>
+
+<MemoEdit Size=Size.Small Rows=5 @bind-Text=@order.Note/>
+
+<Modal @ref="modalNote">
+    <ModalContent Centered>
+        <ModalBody>
+            <MemoEdit Rows=5 @bind-Text=@doorSelected.Note />
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Primary" Clicked="@(()=>modalNote.Hide())">Закрыть</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Modal @ref="modalMarking">
+    <ModalContent Centered>
+        <ModalBody>
+            <MemoEdit Rows=5 @bind-Text=@doorSelected.Marking />
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Primary" Clicked="@(()=>modalMarking.Hide())">Закрыть</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
 
 @code {
-    
+    [Parameter]
+    public string? IdOrder{ get; set; }
+    IEnumerable<DoorType> doorNames = new List<DoorType>();
+
+    Order order = new() { DateCreate = DateOnly.FromDateTime(DateTime.Now) };
+
+    StringBuilder errors = new();
+    Alert errorAlert;
+
+    OrderDoor doorSelected = new();
+
+    private Modal modalNote;
+    private Modal modalMarking;
+    private enttorgsnabContext _db;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _db = dbFactory.CreateDbContext();
+        doorNames = await _db.DoorTypes.Where(d=>d.Enable==true).OrderBy(d => d.Name).ToListAsync();
+        if (IdOrder != null)
+            order = await _db.Orders.Include(o => o.OrderDoors)
+            .Where(o => o.Id == int.Parse(IdOrder)).FirstOrDefaultAsync() ?? new();
+        //return base.OnInitializedAsync();
+    }
+
+    private void save()
+    {
+        errors.Clear();
+        if (order.Shet == string.Empty)
+            errors.Append("Счет должен быть заполнен. ");
+        foreach (var door in order.OrderDoors)
+        {
+            bool flag = false;
+            flag = door.Count == null || door.Count == 0 ? true : flag;
+            flag = door.H == 0 || door.W == 0 ? true : flag;
+            if (flag)
+                errors.Append($"Позиция {door.Position} заполнены не все поля. ");
+        }
+        if (errors.Length != 0)
+        {
+            errorAlert.Show();
+            return;
+        }
+        if (IdOrder == null)
+        {
+            _db.Orders.Add(order);
+            foreach (var door in order.OrderDoors)
+            {
+                door.Order = order;
+                _db.OrderDoors.Add(door);
+            }
+            _db.SaveChanges();
+            return;
+        }
+        else
+            _db.SaveChanges();
+        NavigationManager.NavigateTo("orderlist/1");
+    }
+
+    public void DeletePosition(OrderDoor orderDoor)
+    {
+        order.OrderDoors.Remove(orderDoor);
+        int i = 1;
+        foreach (var pos in order.OrderDoors)
+            pos.Position = i++;
+    }
+
+    public void Dispose() => _db.Dispose();
 }

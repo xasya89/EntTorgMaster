@@ -9,6 +9,8 @@
 @using AutoMapper
 
 @inject IMapper mapper
+@inject IDbContextFactory<enttorgsnabContext> dbFactory
+@inject NavigationManager NavigationMaanager
 
 <h3>ImportExcel</h3>
 
@@ -409,7 +411,7 @@
             return;
         }
         var o= mapper.Map<Order>(order);
-        Console.WriteLine(o);
+        
     }
 }
 
