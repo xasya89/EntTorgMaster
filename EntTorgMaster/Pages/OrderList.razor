@@ -8,6 +8,8 @@
 
 <Button Clicked=@(()=>NavigationManager.NavigateTo("order-edit")) Size=Size.Small Color=Color.Success>Новый</Button>
 
+<input @onchange=@(async (e)=>await Select(e.Value as string))/>
+
 <Pagination>
     <PaginationItem Disabled="@IsPageNavigationDisabled(PREVIOUS)" @onclick="Previous">
         <PaginationLink>
@@ -47,7 +49,7 @@
         </TableRow>
     </TableHeader>
     <TableBody>
-        @foreach(var order in orders)
+        @foreach(var order in ordersInView)
         {
             Color statusColor = Color.Light;
             switch (order.Status)
@@ -76,20 +78,28 @@
 
 @code {
     IEnumerable<Order> orders = new List<Order>();
+    IEnumerable<Order> ordersInView = new List<Order>();
+    int rowcount = 2;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() => await Select();
+
+    private async Task Select(string str="")
     {
         using(var db = dbFactory.CreateDbContext())
         {
-            int orderCount = await db.Orders.CountAsync()/50;
-            pageItems = orderCount / 50 > 10 ? 10 : pageItems / 50;
+            int orderCount = await db.Orders
+            .Where(o=>EF.Functions.Like(o.Shet, $"%{str}%"))
+            .CountAsync();
+            pageItems = orderCount / rowcount > 10 ? 10 : orderCount / rowcount + (orderCount%rowcount == 0 ? 0 : 1);
             if (pageItems == 0)
                 pageItems = 1;
             if (currentPage == null)
                 currentPage = "1";
-
-            orders = await db.Orders.Include(o => o.OrderDoors).OrderByDescending(o => o.DateCreate)
-                .Skip((int.Parse(currentPage) - 1) * 50).Take(50).ToListAsync();
+            orders = await db.Orders.Include(o => o.OrderDoors)
+            .Where(o=>EF.Functions.Like(o.Shet, $"%{str}%"))
+            .OrderByDescending(o => o.DateCreate).ToListAsync();
+            ordersInView = orders.Skip((int.Parse(currentPage) - 1) * rowcount).Take(rowcount);
+            currentPage = "1";
         }
     }
 
@@ -97,7 +107,7 @@
     private const string NEXT = "next";
     [Parameter]
     public string currentPage{ get; set; } = "1";
-    private int pageItems = 5;
+    private int pageItems = 2;
 
     private bool IsActive(string page)
         => currentPage == page;
@@ -134,5 +144,8 @@
     }
 
     private void SetActive(string page)
-        => currentPage = page;
+    {
+        currentPage = page;
+        ordersInView = orders.Skip((int.Parse(currentPage) - 1) * rowcount).Take(rowcount);
+    }
 }

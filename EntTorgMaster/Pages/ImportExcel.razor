@@ -237,6 +237,7 @@
 </Modal>
 
 @code {
+    IEnumerable<DoorType> doorTypes = new List<DoorType>();
     List<string> doorNames = new() { "Ворота", "Дверь метал", "Дверь межк" };
     OrderModel order = new() { DateCreate = DateOnly.FromDateTime(DateTime.Now) };
 
@@ -247,6 +248,15 @@
 
     private Modal modalNote;
     private Modal modalMarking;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using(var db = dbFactory.CreateDbContext())
+        {
+            doorTypes = await db.DoorTypes.OrderBy(d => d.Name).ToListAsync();
+            doorNames = doorTypes.Select(d => d.Name).ToList();
+        }
+    }
 
     private async Task ImportFile(FileChangedEventArgs e)
     {
@@ -400,7 +410,7 @@
         if (order.ShetDate == null)
             errors.AppendLine("Поле дата счета не заполнен");
         var errorPosistions = order.OrderDoors.Where( p=>
-     doorNames.IndexOf(p.Name)==-1 || p.W==null || p.H==null || p.Open==OpenModelType.None
+    doorNames.IndexOf(p.Name)==-1 || p.Count==null || p.W==null || p.H==null || p.Open==OpenModelType.None
         ).ToList();
         foreach (var pos in errorPosistions)
             errors.AppendLine($"В позиции {pos.Position} заполнены не все поля");
@@ -410,8 +420,53 @@
             errorAlert.Show();
             return;
         }
-        var o= mapper.Map<Order>(order);
-        
+        try
+        {
+            var orderDb = new Order
+                {
+                    Shet = order.Shet ?? "",
+                    ShetDate = order.ShetDate,
+                    CustomerName = order.CustomerName ?? "",
+                    CustomerPhone = order.CustomerPhone ?? ""
+                };
+            List<OrderDoor> doors=new ();
+            foreach (var door in order.OrderDoors)
+            {
+                var doortype = doorTypes.Where(d => d.Name == door.Name).FirstOrDefault();
+                doors.Add(new OrderDoor
+                {
+                    Order=orderDb,
+                    Position=door.Position,
+                    DoorTypeId=doortype.Id,
+                    Count=door.Count ?? 0,
+                    H=door.H ?? 0,
+                    W=door.W ?? 0,
+                    S=door.S,
+                    SEqual=door.SEqual,
+                    Open=mapper.Map<OpenType>(door.Open),
+                    Ral=door.Ral,
+                    Nalichnik=mapper.Map<NalichnikType>(door.Nalichnik),
+                    Dovod=mapper.Map<DovodType>(door.Dovod),
+                    Note=door.Note,
+                    Marking=door.Marking,
+                    Shild=door.Shild,
+                    NavesCount=door.NavesCount,
+                    NavesStvorkaCount=door.NavesStvorkaCount,
+                    WindowCount=door.WindowCount,
+                    WindowStvorkaCount=door.WindowStvorkaCount,
+                    Framuga=door.Framuga,
+                    FramugaH=door.FramugaH
+                });
+            }
+            using(var db = dbFactory.CreateDbContext())
+            {
+                db.Orders.Add(orderDb);
+                db.OrderDoors.AddRange(doors);
+                await db.SaveChangesAsync();
+                NavigationMaanager.NavigateTo("order-edit/" + orderDb.Id);
+            }
+        }
+        catch (SystemException) { };
     }
 }
 

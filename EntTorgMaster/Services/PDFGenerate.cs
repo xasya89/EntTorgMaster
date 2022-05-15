@@ -7,18 +7,18 @@ namespace EntTorgMaster.Services
 {
     public static class PDFGenerate
     {
-        public static void GenerateNaryad(IJSRuntime js)
+        public static void GenerateNaryad(IJSRuntime js, List<Order> orders)
         {
             var memoryStream = new MemoryStream();
 
             // Marge in centimeter, then I convert with .ToDpi()
-            float margeLeft = 1.5f;
-            float margeRight = 1.5f;
-            float margeTop = 1.0f;
-            float margeBottom = 1.0f;
+            float margeLeft = 0.5f;
+            float margeRight = 0.5f;
+            float margeTop = 0.5f;
+            float margeBottom = 0.5f;
 
             Document pdf = new Document(
-                                    PageSize.A4,
+                                    PageSize.A5,
                                     margeLeft.ToDpi(),
                                     margeRight.ToDpi(),
                                     margeTop.ToDpi(),
@@ -34,32 +34,38 @@ namespace EntTorgMaster.Services
             PdfWriter writer = PdfWriter.GetInstance(pdf, memoryStream);
 
             //HEADER and FOOTER
+
             var fontStyle = FontFactory.GetFont("Arial", 16, BaseColor.White);
             var labelHeader = new Chunk("Header Blazor PDF", fontStyle);
             HeaderFooter header = new HeaderFooter(new Phrase(labelHeader), false)
             {
                 BackgroundColor = new BaseColor(133, 76, 199),
                 Alignment = Element.ALIGN_CENTER,
-                Border = Rectangle.NO_BORDER
+                Border = iTextSharp.text.Rectangle.NO_BORDER
             };
             //header.Border = Rectangle.NO_BORDER;
-            pdf.Header = header;
+            //pdf.Header = header;
 
 
             var labelFooter = new Chunk("Page", fontStyle);
             HeaderFooter footer = new HeaderFooter(new Phrase(labelFooter), true)
             {
-                Border = Rectangle.NO_BORDER,
+                Border = iTextSharp.text.Rectangle.NO_BORDER,
                 Alignment = Element.ALIGN_RIGHT
             };
-            pdf.Footer = footer;
+            //pdf.Footer = footer;
 
             pdf.Open();
 
             var title = new Paragraph("Text and Paragraphe", new Font(Font.HELVETICA, 20, Font.BOLD));
-            title.SpacingAfter = 18f;
+            title.SetAlignment("right");
+            
 
-            pdf.Add(title);
+            
+            iTextSharp.text.Image image = iTextSharp.text.Image.GetInstance(@"d:\1.jpg");
+            title.Add(image);
+            pdf.Add(image);
+            pdf.Add(labelHeader);
 
             pdf.Close();
 

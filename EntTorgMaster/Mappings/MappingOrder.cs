@@ -9,6 +9,9 @@ namespace EntTorgMaster.Mappings
         public MappingOrder()
         {
             CreateMap<OrderModel, Order>();
+            CreateMap<OpenModelType, OpenType>();
+            CreateMap<NalichnikModelType, NalichnikType>();
+            CreateMap<DovodModelType, DovodType>();
         }
     }
 }

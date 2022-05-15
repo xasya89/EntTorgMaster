@@ -11,7 +11,7 @@
     <Button Clicked=save Size=Size.Small Color=Color.Success>Сохранить</Button>
     <Button Size=Size.Small Color=Color.Primary>Закрыть</Button>
     <Button Size=Size.Small Color=Color.Danger style="margin: 0 10px">Удалить</Button>
-    <Button Clicked="@(()=>{PDFGenerate.GenerateNaryad(js);})" Class="btn-sm btn-primary">Печать</Button>
+    <Button Clicked="@(()=>{PDFGenerate.GenerateNaryad(js,new List<Order>{new Order{}});})" Class="btn-sm btn-primary">Печать</Button>
 </Field>
 <Alert @ref=@errorAlert Color=Color.Danger>
     <AlertMessage>
