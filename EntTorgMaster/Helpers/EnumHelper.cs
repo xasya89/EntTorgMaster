@@ -18,5 +18,6 @@ namespace EntTorgMaster.Helpers
 
             return value.ToString();
         }
+
     }
 }

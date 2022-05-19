@@ -11,7 +11,7 @@
     <Button Clicked=save Size=Size.Small Color=Color.Success>Сохранить</Button>
     <Button Size=Size.Small Color=Color.Primary>Закрыть</Button>
     <Button Size=Size.Small Color=Color.Danger style="margin: 0 10px">Удалить</Button>
-    <Button Clicked="@(()=>{PDFGenerate.GenerateNaryad(js,new List<Order>{new Order{}});})" Class="btn-sm btn-primary">Печать</Button>
+    <Button Clicked="@(()=>{PDFGenerate.GenerateNaryad(js,order);})" Class="btn-sm btn-primary">Печать</Button>
 </Field>
 <Alert @ref=@errorAlert Color=Color.Danger>
     <AlertMessage>
@@ -83,7 +83,7 @@
                         <DropdownMenu>
                             <DropdownItem Clicked=@(()=>DeletePosition(door))>Удалить</DropdownItem>
                             <DropdownDivider />
-                            <DropdownItem>Печать</DropdownItem>
+                            <DropdownItem Clicked=@(()=>PrintOne(door))>Печать</DropdownItem>
                         </DropdownMenu>
                     </Dropdown>
                 </TableRowCell>
@@ -289,6 +289,12 @@
         int i = 1;
         foreach (var pos in order.OrderDoors)
             pos.Position = i++;
+    }
+
+    private void PrintOne(OrderDoor door)
+    {
+        var o=new Order { Shet = order.Shet, ShetDate = order.ShetDate, CustomerName = order.CustomerName, CustomerPhone = order.CustomerPhone, OrderDoors=new List<OrderDoor>() { door} };
+        PDFGenerate.GenerateNaryad(js,o);
     }
 
     public void Dispose() => _db.Dispose();
