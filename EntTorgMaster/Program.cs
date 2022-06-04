@@ -11,6 +11,9 @@ using Blazorise.Icons.FontAwesome;
 using EntTorgMaster.Mappings;
 using EntTorgMaster.Data;
 using EntTorgMaster.Services;
+using EntTorgMaster.Infrastructure;
+using Microsoft.AspNetCore.Components.Authorization;
+using EntTorgMaster;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +21,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
+builder.Services.AddScoped<GoodService>();
+builder.Services.AddScoped<UserService>();
 builder.Services.AddMudServices();
+builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
+builder.Services.AddScoped<AuthenticationStateProvider, TokenAuthenticationStateProvider>();
 
 //Mappings
 builder.Services.AddAutoMapper(typeof(MappingOrder));

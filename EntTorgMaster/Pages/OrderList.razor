@@ -1,6 +1,7 @@
 ﻿@page "/orderlist"
 @page "/orderlist/{currentpage}"
-@using EntTorgMaster.Helpers
+@using EntTorgMaster.Helpers@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 @inject IDbContextFactory<enttorgsnabContext> dbFactory
 @inject NavigationManager NavigationManager
 

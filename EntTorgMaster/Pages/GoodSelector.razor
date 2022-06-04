@@ -1,0 +1,152 @@
+﻿@using EntTorgMaster.Helpers
+@using EntTorgMaster.Services
+@using Blazorise.DataGrid
+@inherits OwningComponentBase
+
+<Div Class="d-xl-inline-flex">
+    <Autocomplete TItem="Good"
+                  TValue="Good"
+                  Data="@Goods"
+                  TextField="@(( item ) => item.Name)"
+                  ValueField="@(( item ) => item)"
+                  @bind-SelectedValue="@GoodSelected"
+                  @bind-SelectedText="selectedAutoCompleteText"
+                  Placeholder="Поиск..."
+                  Filter="AutocompleteFilter.StartsWith"
+                  
+                  Size=Size.Small
+                  CustomFilter="@(( item, searchValue ) => item.Name.IndexOf( searchValue, 0, StringComparison.CurrentCultureIgnoreCase ) >= 0 )">
+        <NotFoundContent> @context не найден! :( </NotFoundContent>
+    </Autocomplete>
+    <Button @onclick=@(()=>dialogGoodAdd()) Class="btn-sm btn-outline-secondary">
+        <Icon Name="IconName.PlusCircle" TextColor="TextColor.Secondary"/>
+    </Button>
+    <Button @onclick=@(()=>{findGoodModal.Show(); })>
+        <Icon Name="IconName.FolderOpen" TextColor="TextColor.Secondary"/>
+    </Button>
+</Div>
+
+
+<Field Horizontal>
+    <FieldBody ColumnSize="ColumnSize.Is12">
+        Selected search value: @GoodSelected?.Name
+    </FieldBody>
+    <FieldBody ColumnSize="ColumnSize.Is12">
+        Selected text value: @selectedAutoCompleteText
+    </FieldBody>
+</Field>
+
+<Modal @ref="addGoodModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Новый товар</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>Наименование</FieldLabel>
+                <TextEdit @bind-Text=dialogGood.Name Size=Size.Small/>
+            </Field>
+            <Field>
+                <FieldLabel>Ед</FieldLabel>
+                <Select @bind-SelectedValue="@dialogGood.Unit" Class="form-select form-select-sm">
+                    @foreach(Enum unit in Enum.GetValues<Unit>())
+                    {
+                        <SelectItem Value=unit>@unit.GetEnumDescription()</SelectItem>
+                    }
+                </Select>
+            </Field>
+            <Field>
+                <FieldLabel>Тип</FieldLabel>
+                <Select @bind-SelectedValue="@dialogGood.Type" Class="form-select form-select-sm">
+                    @foreach(Enum type in Enum.GetValues<GoodType>())
+                    {
+                        <SelectItem Value=type>@type.GetEnumDescription()</SelectItem>
+                    }
+                </Select>
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@(()=> addGoodModal.Hide())">Отмена</Button>
+            <Button Color="Color.Primary" Clicked="@(async ()=> await dialogGoodSave())">Сохранить</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Modal @ref="findGoodModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Новый товар</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <TextEdit @onchange=@(e=>tableGoods=Goods.Where(g=>g.Name.IndexOf(e.Value as string,0,StringComparison.CurrentCultureIgnoreCase)>-1).ToList()) />
+            <DataGrid TItem="Good"
+                      Data="@tableGoods"
+                      @bind-SelectedRow="@GoodSelected"
+                      Virtualize
+                      VirtualizeOptions="@(new() { DataGridHeight = "100vh"})"
+                      Responsive>
+                    <DataGridCommandColumn />
+                    <DataGridColumn Field="@nameof(Good.Id)" Caption="#" Sortable="false" />
+                    <DataGridColumn Field="@nameof(Good.Name)" Caption="Наименование" Sortable />
+                    <DataGridColumn Field="@nameof(Good.UnitStr)" Caption="Ед" Sortable />
+                    <DataGridColumn Field="@nameof(Good.TypeStr)" Caption="Тип" Sortable />
+                    
+            </DataGrid>
+        </ModalBody>
+    </ModalContent>
+</Modal>
+
+@code {
+    [Inject]
+    public GoodService service { get; set; }
+
+    private Modal addGoodModal;
+    private Modal findGoodModal;
+
+    public IEnumerable<Good> Goods;
+
+    private GoodService goodService;
+
+    protected override async Task OnInitializedAsync()
+    {
+        goodService = (GoodService)ScopedServices.GetRequiredService<GoodService>();
+        Goods = await goodService.GetGoods();
+        GoodSelected = new Good { Name = "Товар 1" };
+        //selectedAutoCompleteText = "Товар 1";
+        await base.OnInitializedAsync();
+
+    }
+
+
+    protected override void Dispose(bool disposing) => goodService.Dispose();
+
+    public Good selectedSearchValue { get; set; }
+    public string selectedAutoCompleteText { get; set; }
+
+    Good dialogGood { get; set; } = new Good();
+    void dialogGoodAdd()
+    {
+        dialogGood = new Good();
+        addGoodModal.Show();
+    }
+    async Task dialogGoodSave()
+    {
+        if (dialogGood?.Id == 0)
+            await goodService.AddGood(dialogGood);
+        else
+            await goodService.EditGood(dialogGood);
+        await addGoodModal.Hide();
+        Goods = await goodService.GetGoods();
+    }
+
+
+    List<Good> tableGoods { get; set; } = new();
+}
+
+@code {
+    [Parameter]
+    public Good GoodSelected{ get; set; }
+
+}

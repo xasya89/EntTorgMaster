@@ -1,0 +1,101 @@
+﻿@page "/Users"
+@attribute [Authorize(Roles = nameof(UserRole.Administrator))]
+@using EntTorgMaster.Helpers
+@using EntTorgMaster.Services
+@inherits OwningComponentBase
+
+<h3>Пользователи</h3>
+
+<Button Clicked="@(()=>{selectUser=new(); ShowModal();})"  Size=Size.Small Color="Color.Success">Добавить</Button>
+<Table Responsive Bordered Narrow>
+    <TableHeader>
+        <TableRow>
+            <TableHeaderCell>Имя</TableHeaderCell>
+            <TableHeaderCell>Логин</TableHeaderCell>
+            <TableHeaderCell>Роль</TableHeaderCell>
+            <TableHeaderCell></TableHeaderCell>
+        </TableRow>
+    </TableHeader>
+    <TableBody>
+        @foreach(var user in users)
+        {
+            <TableRow Clicked="@(()=>{selectUser=user; selectUser.Password=""; ShowModal();})">
+                <TableRowCell>@user.Name</TableRowCell>
+                <TableRowCell>@user.Login</TableRowCell>
+                <TableRowCell>@user.Role.GetEnumDescription()</TableRowCell>
+                <TableRowCell>
+                    <Button Clicked=@(()=>userService.RemoveUser(@user.Id)) Size=Size.Small Color=Color.Light>
+                        <Icon Name="IconName.Delete" TextColor=TextColor.Danger/>
+                    </Button>
+                </TableRowCell>
+            </TableRow>
+        }
+    </TableBody>
+</Table>
+
+<Modal @ref="modalRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Пользователь</ModalTitle>
+            <CloseButton Class="btn btn-sm btn-light" />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>Имя</FieldLabel>
+                <TextEdit @bind-Text=selectUser.Name Placeholder="Иванов Иван Иванович" />
+            </Field>
+            <Field>
+                <FieldLabel>Логин</FieldLabel>
+                <TextEdit @bind-Text=selectUser.Login Placeholder="ivanov" />
+            </Field>
+            <Field>
+                <FieldLabel>Пароль</FieldLabel>
+                <TextEdit @bind-Text=selectUser.Password />
+            </Field>
+            <Field>
+                <FieldLabel>Роль</FieldLabel>
+                <Select TValue=UserRole SelectedValue="@selectUser.Role" SelectedValueChanged="(e)=>selectUser.Role=e" Class="form-select form-select-sm">
+                    @foreach (Enum role in Enum.GetValues(typeof(UserRole)))
+                    {
+                        <SelectItem value="@role">@role.GetEnumDescription()</SelectItem>
+                    }
+                </Select>
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideModal">Отмена</Button>
+            <Button Color="Color.Primary" Clicked="@SaveUser">Сохранить</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+@code {
+    private UserService userService;
+    private List<User> users=new();
+    private User selectUser=new();
+
+    private Modal modalRef;
+    private Task ShowModal() => modalRef.Show();
+    private Task HideModal() => modalRef.Hide();
+
+    protected override async Task OnInitializedAsync()
+    {
+        userService = (UserService)ScopedServices.GetRequiredService<UserService>();
+        await Select();
+    }
+
+    private async Task Select() =>
+        users = (await userService.GetUsers()).ToList() ?? new();
+
+    private async Task SaveUser()
+    {
+        selectUser.Password = selectUser.Password.CreateMD5();
+        if (selectUser.Id == 0)
+            await userService.AddUser(selectUser);
+        else
+            await userService.UpdateUser(selectUser.Id, selectUser);
+        HideModal();
+        await Select();
+    }
+
+
+}

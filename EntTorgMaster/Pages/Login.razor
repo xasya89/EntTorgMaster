@@ -1,0 +1,17 @@
+﻿@page "/login"
+@inherits LoginModel
+<h3>Login</h3>
+
+<div class="row">
+    <div class="col-6 offset-md-3">
+        <EditForm Model="@LoginDate" OnValidSubmit="LoginAync">
+            <DataAnnotationsValidator/>
+            <InputText id="userName" @bind-Value="LoginDate.UserName"/>
+            <InputText id="password" @bind-Value="LoginDate.Password"/>
+
+            <p class="my-4">
+                <button type="submit">Login</button>
+            </p>
+        </EditForm>
+    </div>
+</div>

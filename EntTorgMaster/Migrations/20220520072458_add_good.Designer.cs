@@ -3,6 +3,7 @@ using System;
 using EntTorgMaster.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EntTorgMaster.Migrations
 {
     [DbContext(typeof(enttorgsnabContext))]
-    partial class enttorgsnabContextModelSnapshot : ModelSnapshot
+    [Migration("20220520072458_add_good")]
+    partial class add_good
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -183,32 +185,6 @@ namespace EntTorgMaster.Migrations
                     b.HasIndex("OrderId");
 
                     b.ToTable("OrderDoors");
-                });
-
-            modelBuilder.Entity("EntTorgMaster.Data.User", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("Login")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("Role")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("EntTorgMaster.Data.OrderDoor", b =>

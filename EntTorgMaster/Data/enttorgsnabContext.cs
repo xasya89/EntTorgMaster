@@ -10,6 +10,8 @@ namespace EntTorgMaster.Data
         public DbSet<DoorType> DoorTypes { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDoor> OrderDoors { get; set; }
+        public DbSet<Good> Goods { get; set; }
+        public DbSet<User> Users { get; set; }
         public enttorgsnabContext()
         {
         }
