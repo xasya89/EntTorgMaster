@@ -3,6 +3,7 @@ using System;
 using EntTorgMaster.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EntTorgMaster.Migrations
 {
     [DbContext(typeof(enttorgsnabContext))]
-    partial class enttorgsnabContextModelSnapshot : ModelSnapshot
+    [Migration("20220606161033_Add_Arrivals_Contractor")]
+    partial class Add_Arrivals_Contractor
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -82,15 +84,19 @@ namespace EntTorgMaster.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Inn")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Kpp")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Mail")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Note")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("OrgName")
@@ -98,6 +104,7 @@ namespace EntTorgMaster.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Phone")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("Id");

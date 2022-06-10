@@ -1,0 +1,207 @@
+﻿@using EntTorgMaster.Data
+@using EntTorgMaster.Services
+@using EntTorgMaster.Helpers
+@using Blazorise.DataGrid
+@using System.Text.Json
+@inherits OwningComponentBase
+
+
+<Modal @ref="goodModal">
+    <ModalContent Centered Size=ModalSize.Large>
+        <ModalHeader>
+            <ModalTitle>Номенклатура</ModalTitle>
+            <CloseButton Class="btn btn-sm" />
+        </ModalHeader>
+        <ModalBody>
+
+            <input @bind-value=@customFilterValue></input>
+            <DataGrid
+                TItem="Good"
+                      Data="@goods"
+                      @bind-SelectedRow=@selectedGood
+                      TotalItems="@totalGoods"
+                      ReadData="@OnReadData"
+                      CommandMode="DataGridCommandMode.ButtonRow"
+                      EditMode="DataGridEditMode.Popup"
+                      CustomFilter="@OnCustomFilter"
+                      PageSize="5"
+                      ShowPager
+                      Filterable
+                      >
+                <DataGridColumns>
+                    <DataGridColumn Field="@nameof(Good.Name)" Caption="Наименование" />
+                    <DataGridColumn Field="@nameof(Good.Unit)" Caption="Ед"  />
+                    <DataGridColumn Field="@nameof(Good.Type)" Caption="Тип"  />
+                    <DataGridColumn Field="@nameof(Good.Volume)" Caption="Объем" />
+                    <DataGridColumn Field="@nameof(Good.isEnable)" Caption="Используется" />
+                </DataGridColumns>
+                <ButtonRowTemplate>
+                    <Button Color="Color.Success" Clicked=@(async ()=> await addGoodStart())>Добавить</Button>
+                    <Button Color="Color.Primary" Disabled="(selectedGood is null)" Clicked=@(()=> editGoodStart(selectedGood))>Изменить</Button>
+                    <Button Color="Color.Danger" Disabled="(selectedGood is null)" Clicked=@(async ()=> await deleteGood(context.DeleteCommand.Item))>Удалить</Button>
+                    <Button Color="Color.Link" Clicked="context.ClearFilterCommand.Clicked">Clear Filter</Button>
+                </ButtonRowTemplate>
+            </DataGrid>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@Cencel">Отмена</Button>
+            <Button Color="Color.Primary" Clicked="@Ok">Выбрать</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<Modal @ref="addOrEditGoodModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle></ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>Наименование</FieldLabel>
+                <TextEdit @bind-Text=@editingGood.Name Class="form-control form-control-sm" />
+            </Field>
+            <Field>
+                <FieldLabel>Ед</FieldLabel>
+                <Select TValue=Unit SelectedValue="@editingGood.Unit" SelectedValueChanged="(e)=>editingGood.Unit=e" Class="form-select form-select-sm">
+                    @foreach (Enum unit in Enum.GetValues(typeof(Unit)))
+                    {
+                        <SelectItem value="@unit">@unit.GetEnumDescription()</SelectItem>
+                    }
+                </Select>
+            </Field>
+            <Field>
+                <FieldLabel>Тип</FieldLabel>
+                <Select TValue=GoodType SelectedValue=@editingGood.Type SelectedValueChanged=@(e=>editingGood.Type=e) Class="form-select form-select-sm">
+                    @foreach(Enum type in Enum.GetValues(typeof(GoodType)))
+                    {
+                        <SelectItem Value="@type">@type.GetEnumDescription()</SelectItem>
+                    }
+                </Select>
+            </Field>
+            <Field>
+                <FieldLabel>Объем</FieldLabel>
+                <input @bind-value=@editingGood.Volume class="form-control form-control-sm" />
+            </Field>
+            <Field>
+                <FieldLabel>Используется</FieldLabel>
+                <Check TValue=bool @bind-Checked=@editingGood.isEnable>используется</Check>
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked=@(async ()=> await addOrEditGoodModal.Hide())>Отмена</Button>
+            <Button Color="Color.Primary" Clicked=@(async ()=> {await addOrEditGood(editingGood); await addOrEditGoodModal.Hide(); })>Сохранить</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code{
+    [Parameter]
+    public EventCallback<Good> Change{ get; set; }
+    [Inject]
+    private GoodService _goodService{ get; set; }
+
+    private List<Good> goods { get; set; } = new();
+    private Good selectedGood{ get; set; }
+    //private Contractor customFilterValue { get; set; }=new();
+
+    private Modal goodModal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        goods = await _goodService.GetGoods();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task addGoodStart()
+    {
+        editingGood = new();
+        await addOrEditGoodModal.Show();
+    }
+
+    private async Task editGoodStart(Good good)
+    {
+        editingGood = good;
+        await addOrEditGoodModal.Show();
+    }
+
+    private async Task addOrEditGood(Good item)
+    {
+        if (item.Id == 0)
+            await _goodService.AddGood(item);
+        else
+            await _goodService.EditGood(item);
+        await Select();
+    }
+
+    private async Task deleteGood(Good item)
+    {
+        await _goodService.RemoveGood(item.Id);
+        await Select();
+        selectedGood = null;
+    }
+
+    private string filterStr = "";
+    private int totalGoods;
+
+    private async Task OnReadData( DataGridReadDataEventArgs<Good> e )
+    {
+        var columnGoodName = (string?) e.Columns.Where(c => c.Field == nameof(Good.Name)).FirstOrDefault()?.SearchValue;
+        filterStr = columnGoodName ?? "";
+        if ( !e.CancellationToken.IsCancellationRequested )
+        {
+            List<Good> response = null;
+
+            // this can be call to anything, in this case we're calling a fictional api
+            //var response = await Http.GetJsonAsync<Employee[]>( $"some-api/employees?page={e.Page}&pageSize={e.PageSize}" );
+            if ( e.ReadDataMode is DataGridReadDataMode.Virtualize )
+                response = (await _goodService.GetGoods(columnGoodName)).Skip( e.VirtualizeOffset ).Take( e.VirtualizeCount ).ToList();
+            else if ( e.ReadDataMode is DataGridReadDataMode.Paging )
+                response = (await _goodService.GetGoods(columnGoodName)).Skip( ( e.Page - 1 ) * e.PageSize ).Take( e.PageSize ).ToList();
+            else
+                throw new Exception( "Unhandled ReadDataMode" );
+
+            if ( !e.CancellationToken.IsCancellationRequested )
+            {
+                totalGoods = (await _goodService.GetGoods(columnGoodName)).Count;
+                goods = new List<Good>( response ); // an actual data for the current page
+            }
+        }
+    }
+
+    private async Task Select()
+    {
+        List<Good> response = null;
+        response = (await _goodService.GetGoods()).Take(5).ToList();
+        totalGoods = (await _goodService.GetGoods()).Count;
+        goods = new List<Good>(response); // an actual data for the current page
+    }
+
+    public Task ShowModal()
+    {
+        return goodModal.Show();
+    }
+
+    private Task Cencel() => goodModal.Hide();
+
+    private Task Ok()
+    {
+        Change.InvokeAsync(selectedGood);
+        return goodModal.Hide();
+    }
+
+    private string customFilterValue;
+
+    private bool OnCustomFilter( Good model )
+    {
+        // We want to accept empty value as valid or otherwise
+        // datagrid will not show anything.
+        if ( string.IsNullOrEmpty( customFilterValue ) )
+            return true;
+
+        return model.Name?.Contains( customFilterValue, StringComparison.OrdinalIgnoreCase ) == true;
+    }
+
+    private Modal addOrEditGoodModal;
+    private Good editingGood = new();
+}

@@ -12,6 +12,10 @@ namespace EntTorgMaster.Data
         public DbSet<OrderDoor> OrderDoors { get; set; }
         public DbSet<Good> Goods { get; set; }
         public DbSet<User> Users { get; set; }
+
+        public DbSet<Contractor> Contractors { get; set; }
+        public DbSet<Arrival> Arrivals { get; set; }
+        public DbSet<ArrivalGood> ArrivalGoods { get; set; }
         public enttorgsnabContext()
         {
         }
@@ -43,6 +47,19 @@ namespace EntTorgMaster.Data
                 .HasOne(d => d.DoorType)
                 .WithMany(d => d.OrderDoors)
                 .HasForeignKey(d => d.DoorTypeId);
+
+            modelBuilder.Entity<ArrivalGood>()
+                .HasOne(a => a.Good)
+                .WithMany(g => g.ArrivalGoods)
+                .HasForeignKey(a => a.GoodId);
+            modelBuilder.Entity<ArrivalGood>()
+                .HasOne(a => a.Arrival)
+                .WithMany(a => a.ArrivalGoods)
+                .HasForeignKey(a => a.ArrivalId);
+            modelBuilder.Entity<Arrival>()
+                .HasOne(a => a.Contractor)
+                .WithMany(c => c.Arrivals)
+                .HasForeignKey(a => a.ContractorId);
 
             OnModelCreatingPartial(modelBuilder);
         }

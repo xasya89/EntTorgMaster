@@ -87,12 +87,13 @@
                       Virtualize
                       VirtualizeOptions="@(new() { DataGridHeight = "100vh"})"
                       Responsive>
-                    <DataGridCommandColumn />
-                    <DataGridColumn Field="@nameof(Good.Id)" Caption="#" Sortable="false" />
-                    <DataGridColumn Field="@nameof(Good.Name)" Caption="Наименование" Sortable />
-                    <DataGridColumn Field="@nameof(Good.UnitStr)" Caption="Ед" Sortable />
-                    <DataGridColumn Field="@nameof(Good.TypeStr)" Caption="Тип" Sortable />
-                    
+                      <DataGridColumns>
+                        <DataGridCommandColumn />
+                        <DataGridColumn Field="@nameof(Good.Id)" Caption="#" Sortable="false" />
+                        <DataGridColumn Field="@nameof(Good.Name)" Caption="Наименование" Sortable />
+                        <DataGridColumn Field="@nameof(Good.UnitStr)" Caption="Ед" Sortable />
+                        <DataGridColumn Field="@nameof(Good.TypeStr)" Caption="Тип" Sortable />
+                      </DataGridColumns>
             </DataGrid>
         </ModalBody>
     </ModalContent>

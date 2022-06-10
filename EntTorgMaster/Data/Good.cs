@@ -7,12 +7,14 @@ namespace EntTorgMaster.Data
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public Unit Unit { get; set; }
+        public Unit Unit { get; set; } = Unit.M;
         public string UnitStr { get => Unit.GetEnumDescription() ?? ""; }
-        public GoodType Type { get; set; }
+        public GoodType Type { get; set; } = GoodType.Metal;
         public string TypeStr { get=> Type.GetEnumDescription() ?? ""; }
         public decimal? Volume { get; set; }
         public bool isEnable { get; set; } = true;
+
+        public List<ArrivalGood> ArrivalGoods { get; set; } = new List<ArrivalGood>();
     }
 
     public enum Unit

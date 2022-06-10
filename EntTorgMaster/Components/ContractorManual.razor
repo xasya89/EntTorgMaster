@@ -1,0 +1,153 @@
+﻿@using EntTorgMaster.Data
+@using EntTorgMaster.Services
+@using Blazorise.DataGrid
+@using System.Text.Json
+@inherits OwningComponentBase
+
+
+<Modal @ref="constractorModal">
+    <ModalContent Centered Size=ModalSize.Large>
+        <ModalHeader>
+            <ModalTitle>Контрагент</ModalTitle>
+            <CloseButton Class="btn btn-sm" />
+        </ModalHeader>
+        <ModalBody>
+
+            <input @bind-value=@customFilterValue></input>
+            <DataGrid
+                TItem="Contractor"
+                      Data="@contractors"
+                      @bind-SelectedRow=@selectedContractor
+                      TotalItems="@totalContractors"
+                      ReadData="@OnReadData"
+                      CommandMode="DataGridCommandMode.ButtonRow"
+                      EditMode="DataGridEditMode.Popup"
+                      CustomFilter="@OnCustomFilter"
+                      PageSize="5"
+                      ShowPager
+                      Filterable
+                      >
+                <DataGridColumns>
+                        <DataGridCommandColumn NewCommandAllowed="false" EditCommandAllowed="false" DeleteCommandAllowed="false"  >
+                            <SaveCommandTemplate>
+                                <Button ElementId="btnSave" Type="ButtonType.Submit" PreventDefaultOnSubmit Color="Color.Primary" Clicked=@(async ()=>{  await context.Clicked.InvokeAsync(); await addOrEditContractor(context.Item); await Select(); })>@context.LocalizationString</Button>
+                            </SaveCommandTemplate> 
+                            <CancelCommandTemplate>
+                                <Button ElementId="btnCancel" Color="Color.Secondary" Clicked="@context.Clicked">@context.LocalizationString</Button>
+                            </CancelCommandTemplate>
+                        </DataGridCommandColumn>
+                    <DataGridColumn Field="@nameof(Contractor.OrgName)" Caption="Организация" Editable/>
+                    <DataGridColumn Field="@nameof(Contractor.Inn)" Caption="ИНН" Editable />
+                    <DataGridColumn Field="@nameof(Contractor.Kpp)" Caption="КПП" Editable />
+                    <DataGridColumn Field="@nameof(Contractor.Phone)" Caption="Телефон" Editable/>
+                    <DataGridColumn Field="@nameof(Contractor.Mail)" Caption="Email" Editable/>
+                </DataGridColumns>
+                <ButtonRowTemplate>
+                    <Button Color="Color.Success" Clicked="context.NewCommand.Clicked">Добавить</Button>
+                    <Button Color="Color.Primary" Disabled="(selectedContractor is null)" Clicked="context.EditCommand.Clicked">Изменить</Button>
+                    <Button Color="Color.Danger" Disabled="(selectedContractor is null)" Clicked=@(async ()=> await deleteContractor(context.DeleteCommand.Item))>Удалить</Button>
+                    <Button Color="Color.Link" Clicked="context.ClearFilterCommand.Clicked">Clear Filter</Button>
+                </ButtonRowTemplate>
+            </DataGrid>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@Cencel">Отмена</Button>
+            <Button Color="Color.Primary" Clicked="@Ok">Выбрать</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code{
+    [Parameter]
+    public EventCallback<Contractor> Change{ get; set; }
+    [Inject]
+    private ContractorService _contractorService{ get; set; }
+
+    private List<Contractor> contractors { get; set; } = new();
+    private Contractor selectedContractor{ get; set; }
+    //private Contractor customFilterValue { get; set; }=new();
+
+    private Modal constractorModal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        contractors = await _contractorService.Get();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task addOrEditContractor(Contractor item)
+    {
+        if (item.Id == 0)
+            await _contractorService.Add(item);
+        else
+            await _contractorService.Edit(item);
+    }
+
+    private async Task deleteContractor(Contractor item)
+    {
+        await _contractorService.Remove(item.Id);
+        await Select();
+        selectedContractor = null;
+    }
+
+    private string filterStr = "";
+    private int totalContractors;
+
+    private async Task OnReadData( DataGridReadDataEventArgs<Contractor> e )
+    {
+        var columnOrgName = (string?) e.Columns.Where(c => c.Field == nameof(Contractor.OrgName)).FirstOrDefault()?.SearchValue;
+        filterStr = columnOrgName ?? "";
+        if ( !e.CancellationToken.IsCancellationRequested )
+        {
+            List<Contractor> response = null;
+
+            // this can be call to anything, in this case we're calling a fictional api
+            //var response = await Http.GetJsonAsync<Employee[]>( $"some-api/employees?page={e.Page}&pageSize={e.PageSize}" );
+            if ( e.ReadDataMode is DataGridReadDataMode.Virtualize )
+                response = (await _contractorService.Get(columnOrgName)).Skip( e.VirtualizeOffset ).Take( e.VirtualizeCount ).ToList();
+            else if ( e.ReadDataMode is DataGridReadDataMode.Paging )
+                response = (await _contractorService.Get(columnOrgName)).Skip( ( e.Page - 1 ) * e.PageSize ).Take( e.PageSize ).ToList();
+            else
+                throw new Exception( "Unhandled ReadDataMode" );
+
+            if ( !e.CancellationToken.IsCancellationRequested )
+            {
+                totalContractors = (await _contractorService.Get(columnOrgName)).Count;
+                contractors = new List<Contractor>( response ); // an actual data for the current page
+            }
+        }
+    }
+
+    private async Task Select()
+    {
+        List<Contractor> response = null;
+        response = (await _contractorService.Get()).Take(5).ToList();
+        totalContractors = (await _contractorService.Get()).Count;
+        contractors = new List<Contractor>(response); // an actual data for the current page
+    }
+
+    public Task ShowModal()
+    {
+        return constractorModal.Show();
+    }
+
+    private Task Cencel() => constractorModal.Hide();
+
+    private Task Ok()
+    {
+        Change.InvokeAsync(selectedContractor);
+        return constractorModal.Hide();
+    }
+
+    private string customFilterValue;
+
+    private bool OnCustomFilter( Contractor model )
+    {
+        // We want to accept empty value as valid or otherwise
+        // datagrid will not show anything.
+        if ( string.IsNullOrEmpty( customFilterValue ) )
+            return true;
+
+        return model.OrgName?.Contains( customFilterValue, StringComparison.OrdinalIgnoreCase ) == true;
+    }
+}

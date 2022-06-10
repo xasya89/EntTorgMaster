@@ -1,0 +1,59 @@
+﻿@page "/arrival"
+@attribute [Authorize]
+@using EntTorgMaster.Data
+@using EntTorgMaster.Components
+@using System.ComponentModel.DataAnnotations;
+
+<Validations Model=@arrival>
+        <Fields>
+            <Validation>
+            <Field ColumnSize="ColumnSize.Is4.OnDesktop">
+                <FieldLabel>№</FieldLabel>
+                <TextEdit @bind-Text=@arrival.Num Size=Size.Small/>
+            </Field>
+            </Validation>
+            <Validation>
+            <Field ColumnSize="ColumnSize.Is4.OnDesktop">
+                <FieldLabel>Дата</FieldLabel>
+                <DateEdit @bind-Date=@arrival.DateArrival Size=Size.Small/>
+            </Field>
+            </Validation>
+            <Field ColumnSize="ColumnSize.Is4.OnDesktop">
+                <FieldLabel>Поставщик</FieldLabel>
+                <TextEdit Text=@contractorOrgName Size=Size.Small/>
+                <Button Clicked=@(async ()=>await contractorManual.ShowModal()) >...</Button>
+                <ContractorManual @ref=contractorManual Change=@(c=>arrival.Contractor=c )/>
+            </Field>
+        </Fields>
+        <Button Clicked=@(()=>goodManual.ShowModal()) Size=Size.Small Color=Color.Primary>Добавить</Button>
+        <table class="table table-sm table-bordered">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Номенклатура</th>
+                    <th>Ед</th>
+                    <th>Кол-во</th>
+                    <th>Цена</th>
+                    <th>Сумма</th>
+                </tr>
+            </thead>
+        </table>
+</Validations>
+
+<GoodManual @ref=goodManual />
+
+@code {
+    GoodManual goodManual;
+    ContractorManual contractorManual;
+    string _contractorOrgName;
+    [Required]
+    [MinLength(1)]
+    string contractorOrgName
+    {
+        get => arrival.Contractor?.OrgName ?? "";
+        set { _contractorOrgName = value; }
+    }
+    Arrival arrival=new();
+
+
+}

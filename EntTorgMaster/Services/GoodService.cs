@@ -1,4 +1,5 @@
-﻿namespace EntTorgMaster.Services
+﻿using Microsoft.EntityFrameworkCore;
+namespace EntTorgMaster.Services
 {
     public class GoodService:IDisposable
     {
@@ -7,6 +8,8 @@
             => _db = dbFactory.CreateDbContext();
 
         public async Task<List<Good>> GetGoods() => await _db.Goods.OrderBy(g => g.Name).ToListAsync();
+        public async Task<List<Good>> GetGoods(string name) =>
+            await _db.Goods.Where(g => EF.Functions.Like(g.Name, $"%{name}%")).ToListAsync();
 
         public async Task<Good> GetGood(int id) => await _db.Goods.FindAsync(id);
 

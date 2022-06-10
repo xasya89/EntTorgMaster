@@ -5,10 +5,24 @@
 
 Welcome to your new app.
 
+<input value=@contractor?.OrgName  class="form-control form-control-sm"/>
+<button @onclick=@(async ()=> await contractorManual?.ShowModal())>2323</button>
+
 <SurveyPrompt Title="How is Blazor working for you?" />
 
+<GoodSelector GoodSelected=@(new Good{Name="Товар"}) />
+<GoodSelector />
+<GoodSelector GoodSelected=@(new Good{Name="Товар"}) />
+<GoodSelector />
 
-<GoodSelector GoodSelected=@(new Good{Name="Товар"}) />
-<GoodSelector />
-<GoodSelector GoodSelected=@(new Good{Name="Товар"}) />
-<GoodSelector />
+<ContractorManual @ref=contractorManual Change=@(c=>contractor=c ) />
+<button @onclick=@(()=>Contractors.Add(new Contractor{OrgName=Contractors.Count.ToString()}))>Add</button>
+<p>@selected</p>
+@code{
+    private string selected { get; set; }
+    private ContractorManual contractorManual;
+
+    private Contractor? contractor{ get; set; }
+
+    private List<Contractor> Contractors { get; set; } = new();
+}
