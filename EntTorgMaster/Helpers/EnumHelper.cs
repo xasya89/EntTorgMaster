@@ -9,7 +9,7 @@ namespace EntTorgMaster.Helpers
         {
             if (value == null) return null;
             FieldInfo fi = value.GetType().GetField(value.ToString());
-
+            if (fi == null) return null;
             DescriptionAttribute[] attributes = fi.GetCustomAttributes(typeof(DescriptionAttribute), false) as DescriptionAttribute[];
 
             if (attributes != null && attributes.Any())

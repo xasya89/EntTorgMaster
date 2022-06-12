@@ -14,7 +14,7 @@
         </ModalHeader>
         <ModalBody>
 
-            <input @bind-value=@customFilterValue></input>
+            <input value=@filterStr @oninput=@(e=>Select(e.Value?.ToString() ?? ""))  class="form-control form-control-sm"/>
             <DataGrid
                 TItem="Good"
                       Data="@goods"
@@ -23,10 +23,8 @@
                       ReadData="@OnReadData"
                       CommandMode="DataGridCommandMode.ButtonRow"
                       EditMode="DataGridEditMode.Popup"
-                      CustomFilter="@OnCustomFilter"
                       PageSize="5"
                       ShowPager
-                      Filterable
                       >
                 <DataGridColumns>
                     <DataGridColumn Field="@nameof(Good.Name)" Caption="Наименование" />
@@ -143,11 +141,10 @@
 
     private string filterStr = "";
     private int totalGoods;
+    private int pageSelect = 0;
 
     private async Task OnReadData( DataGridReadDataEventArgs<Good> e )
     {
-        var columnGoodName = (string?) e.Columns.Where(c => c.Field == nameof(Good.Name)).FirstOrDefault()?.SearchValue;
-        filterStr = columnGoodName ?? "";
         if ( !e.CancellationToken.IsCancellationRequested )
         {
             List<Good> response = null;
@@ -155,25 +152,34 @@
             // this can be call to anything, in this case we're calling a fictional api
             //var response = await Http.GetJsonAsync<Employee[]>( $"some-api/employees?page={e.Page}&pageSize={e.PageSize}" );
             if ( e.ReadDataMode is DataGridReadDataMode.Virtualize )
-                response = (await _goodService.GetGoods(columnGoodName)).Skip( e.VirtualizeOffset ).Take( e.VirtualizeCount ).ToList();
+                response = (await _goodService.GetGoods(filterStr)).Skip( e.VirtualizeOffset ).Take( e.VirtualizeCount ).ToList();
             else if ( e.ReadDataMode is DataGridReadDataMode.Paging )
-                response = (await _goodService.GetGoods(columnGoodName)).Skip( ( e.Page - 1 ) * e.PageSize ).Take( e.PageSize ).ToList();
+            {
+                pageSelect = e.Page - 1;
+                response = (await _goodService.GetGoods(filterStr)).Skip( ( pageSelect ) * e.PageSize ).Take( e.PageSize ).ToList();
+            }
             else
                 throw new Exception( "Unhandled ReadDataMode" );
 
             if ( !e.CancellationToken.IsCancellationRequested )
             {
-                totalGoods = (await _goodService.GetGoods(columnGoodName)).Count;
+                totalGoods = (await _goodService.GetGoods(filterStr)).Count;
                 goods = new List<Good>( response ); // an actual data for the current page
             }
         }
     }
 
+    private async Task Select(string value)
+    {
+        filterStr = value;
+        await Select();
+    }
+
     private async Task Select()
     {
         List<Good> response = null;
-        response = (await _goodService.GetGoods()).Take(5).ToList();
-        totalGoods = (await _goodService.GetGoods()).Count;
+        response = (await _goodService.GetGoods(filterStr)).Skip(pageSelect).Take(5).ToList();
+        totalGoods = (await _goodService.GetGoods(filterStr)).Count;
         goods = new List<Good>(response); // an actual data for the current page
     }
 

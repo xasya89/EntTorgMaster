@@ -16,6 +16,7 @@ namespace EntTorgMaster.Data
         public DateOnly DateArrival { get; set; }
         public int ContractorId { get; set; }
         public Contractor Contractor { get; set; }
+        public string ContractorOrgName { get => Contractor?.OrgName; }
         public decimal SumAll { get; set; } = 0;
         public List<ArrivalGood> ArrivalGoods { get; set; } = new();
     }
@@ -25,6 +26,7 @@ namespace EntTorgMaster.Data
         public int Id { get; set; }
         public int ArrivalId { get; set; }
         public Arrival Arrival { get; set; }
+        public int Position { get; set; }
         [Required]
         public int GoodId { get; set; }
         public Good Good { get; set; }

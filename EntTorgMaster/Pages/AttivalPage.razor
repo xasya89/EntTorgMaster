@@ -1,8 +1,17 @@
-﻿@page "/arrival"
+﻿@page "/arrival/{arrivalid:int?}"
 @attribute [Authorize]
 @using EntTorgMaster.Data
 @using EntTorgMaster.Components
+@using EntTorgMaster.Helpers
 @using System.ComponentModel.DataAnnotations;
+@using EntTorgMaster.Services
+
+<Button Clicked=Save Size=Size.Small Color=Color.Success>
+    <Icon Name=IconName.Save /> Сохранить
+</Button>
+<Button Size=Size.Small Color=Color.Danger>
+    Закрыть
+</Button>
 
 <Validations Model=@arrival>
         <Fields>
@@ -20,29 +29,65 @@
             </Validation>
             <Field ColumnSize="ColumnSize.Is4.OnDesktop">
                 <FieldLabel>Поставщик</FieldLabel>
-                <TextEdit Text=@contractorOrgName Size=Size.Small/>
+                <TextEdit @onclick=@(async ()=>await contractorManual.ShowModal()) Text=@contractorOrgName Size=Size.Small/>
                 <Button Clicked=@(async ()=>await contractorManual.ShowModal()) >...</Button>
-                <ContractorManual @ref=contractorManual Change=@(c=>arrival.Contractor=c )/>
+                <ContractorManual @ref=contractorManual Change=@(async contractor=>arrival.Contractor=await _db.Contractors.Where(c=>c.Id==contractor.Id).FirstOrDefaultAsync() )/>
             </Field>
         </Fields>
-        <Button Clicked=@(()=>goodManual.ShowModal()) Size=Size.Small Color=Color.Primary>Добавить</Button>
+        <Button Clicked=@addPosition Size=Size.Small Color=Color.Primary>Добавить</Button>
         <table class="table table-sm table-bordered">
             <thead>
                 <tr>
                     <th></th>
+                    <th></th>
                     <th>Номенклатура</th>
+                    <th></th>
                     <th>Ед</th>
                     <th>Кол-во</th>
                     <th>Цена</th>
                     <th>Сумма</th>
                 </tr>
             </thead>
+            <tbody>
+                @code{
+                int numPP=1;
+            }
+                @foreach(var aGood in arrival.ArrivalGoods)
+                {
+
+                    <tr>
+                        <td>
+                            <Button Clicked=@(()=> removePosition(aGood)) Size=Size.Small Color=Color.Light>
+                                <Icon Name=IconName.Remove />
+                            </Button>
+                        </td>
+                        <td>@aGood.Position</td>
+                        <td>@aGood.Good?.Name</td>
+                        <td>
+                            <Button Clicked=@(()=>editPosition(aGood)) Size=Size.Small Color=Color.Light>
+                                <Icon Name=IconName.Edit />
+                            </Button>
+                        </td>
+                        <td>@aGood.Good?.UnitStr</td>
+                        <td><input @bind-value=@aGood.Count class="form-control form-control-sm" /></td>
+                        <td><input @bind-value=@aGood.Price class="form-control form-control-sm" /></td>
+                        <td><input value=@aGood.Sum class="form-control form-control-sm" /></td>
+                    </tr>
+                }
+            </tbody>
         </table>
 </Validations>
 
-<GoodManual @ref=goodManual />
+<GoodManual @ref=goodManual Change=@(g=>addOrEditPosition(g.Id)) />
 
 @code {
+    [Parameter]
+    public int? ArrivalId{ get; set; }
+    [Inject] ArrivalService _arrivalService{ get; set; }
+    [Inject] IDbContextFactory<enttorgsnabContext> dbContextFactory{ get; set; }
+    [Inject] NavigationManager navigationManager{ get; set; }
+
+    private enttorgsnabContext _db;
     GoodManual goodManual;
     ContractorManual contractorManual;
     string _contractorOrgName;
@@ -53,7 +98,57 @@
         get => arrival.Contractor?.OrgName ?? "";
         set { _contractorOrgName = value; }
     }
-    Arrival arrival=new();
+    Arrival arrival=new(){DateArrival=DateOnly.FromDateTime(DateTime.Now)};
+    private ArrivalGood selectedPostion = new();
 
 
+    protected override async Task OnInitializedAsync()
+    {
+        _db = dbContextFactory.CreateDbContext();
+        if (ArrivalId != null)
+            arrival = await _db.Arrivals.Include(a => a.Contractor).Include(a => a.ArrivalGoods).ThenInclude(ag => ag.Good)
+            .Where(a => a.Id == ArrivalId).FirstOrDefaultAsync();
+    }
+
+
+    private async Task Save()
+    {
+        arrival.SumAll = arrival.ArrivalGoods.Sum(a => a.Sum);
+        if (arrival.Id == 0)
+        {
+            _db.Arrivals.Add(arrival);
+        }
+        foreach (var agood in arrival.ArrivalGoods)
+            if (agood.Id == 0)
+            {
+                agood.Arrival = arrival;
+                _db.ArrivalGoods.Add(agood);
+            }
+        await _db.SaveChangesAsync();
+        navigationManager.NavigateTo("/arrivals");
+    }
+
+
+    private void addPosition()
+    {
+        selectedPostion = null;
+        goodManual.ShowModal();
+    }
+
+    private void editPosition(ArrivalGood arrivalGood)
+    {
+        selectedPostion = arrivalGood;
+        goodManual.ShowModal();
+    }
+
+    private async Task addOrEditPosition(int goodId)
+    {
+        var good = await _db.Goods.Where(g => g.Id == goodId).FirstOrDefaultAsync();
+        if (selectedPostion == null)
+            arrival.ArrivalGoods.Add(new() { Position = arrival.ArrivalGoods.Count + 1, Good = good });
+        else
+            selectedPostion.Good = good;
+    }
+
+    private async Task removePosition(ArrivalGood arrivalGood) => arrival.ArrivalGoods.Remove(arrivalGood);
 }

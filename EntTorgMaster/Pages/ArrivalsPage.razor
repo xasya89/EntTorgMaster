@@ -1,9 +1,54 @@
 ﻿@page "/arrivals"
 @attribute [Authorize]
+@inherits OwningComponentBase
+@using Blazorise.DataGrid
+@using EntTorgMaster.Data
+@using EntTorgMaster.Helpers
+@using Microsoft.EntityFrameworkCore
 
 <h3>Приходы</h3>
 
 <a href="/arrival" class="btn btn-sm btn-success">Создать</a>
+<input value=@filterStr @oninput=@(async e=>{filterStr=e.Value?.ToString() ?? ""; await Select();}) class="form-control form-control-sm"/>
+<DataGrid TItem="Arrival"
+          Data="@arrivalList"
+          @bind-SelectedRow="@selectedArrival"
+          Responsive
+          PageSize="50"
+          @ondblclick=@EditArrival>
+          <DataGridColumns>
+            <DataGridColumn Field="@nameof(Arrival.Num)" Caption="#" Sortable="false" />
+            <DataGridColumn Field="@nameof(Arrival.DateArrival)" Caption="Дата" />
+            <DataGridColumn Field="@nameof(Arrival.ContractorOrgName)" Caption="Организация"  />
+            <DataGridColumn Field="@nameof(Arrival.SumAll)" Caption="Сумма"  />
+          </DataGridColumns>
+</DataGrid>
 @code {
+    [Inject]
+    public IDbContextFactory<enttorgsnabContext> dbContextFactory { get; set; }
+    [Inject] NavigationManager NavigationManager{ get; set; }
 
+    private enttorgsnabContext _db;
+    private List<Arrival> arrivalList=new();
+    private Arrival selectedArrival;
+    private string filterStr = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _db = dbContextFactory.CreateDbContext();
+        await Select();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task Select()
+    {
+        arrivalList = await _db.Arrivals.Include(a => a.Contractor).Include(a => a.ArrivalGoods).ThenInclude(ag => ag.Good)
+        .Where(a => EF.Functions.Like(a.Num, $"%{filterStr}%") || EF.Functions.Like(a.Contractor.OrgName, $"%{filterStr}%") )
+        .OrderBy(a=>a.DateArrival).Take(50).ToListAsync();
+    }
+
+    private void EditArrival()
+    {
+        NavigationManager.NavigateTo("/arrival/" + selectedArrival.Id);
+    }
 }

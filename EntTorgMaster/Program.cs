@@ -24,6 +24,7 @@ builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddScoped<GoodService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ContractorService>();
+builder.Services.AddScoped<ArrivalService>();
 builder.Services.AddMudServices();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();

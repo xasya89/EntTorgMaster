@@ -3,6 +3,7 @@ using System;
 using EntTorgMaster.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EntTorgMaster.Migrations
 {
     [DbContext(typeof(enttorgsnabContext))]
-    partial class enttorgsnabContextModelSnapshot : ModelSnapshot
+    [Migration("20220612093635_Alter_ArrivalGood_Add_position")]
+    partial class Alter_ArrivalGood_Add_position
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -61,9 +63,6 @@ namespace EntTorgMaster.Migrations
                         .HasColumnType("decimal(65,30)");
 
                     b.Property<int>("GoodId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Position")
                         .HasColumnType("int");
 
                     b.Property<decimal>("Price")
