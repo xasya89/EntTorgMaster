@@ -11,6 +11,9 @@ namespace EntTorgMaster.Services
         public async Task<List<Good>> GetGoods(string name) =>
             await _db.Goods.Where(g => EF.Functions.Like(g.Name, $"%{name}%")).ToListAsync();
 
+        public async Task<List<Good>> GetGoods(string name, GoodType goodType) =>
+            await _db.Goods.Where(g => EF.Functions.Like(g.Name, $"%{name}%") & g.Type==goodType).ToListAsync();
+
         public async Task<Good> GetGood(int id) => await _db.Goods.FindAsync(id);
 
         public async Task AddGood(Good good)

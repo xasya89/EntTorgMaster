@@ -7,17 +7,24 @@ namespace EntTorgMaster.Helpers
     {
         public static string GetEnumDescription(this Enum value)
         {
-            if (value == null) return null;
-            FieldInfo fi = value.GetType().GetField(value.ToString());
-            if (fi == null) return null;
-            DescriptionAttribute[] attributes = fi.GetCustomAttributes(typeof(DescriptionAttribute), false) as DescriptionAttribute[];
-
-            if (attributes != null && attributes.Any())
+            try
             {
-                return attributes.First().Description;
-            }
+                if (value == null) return null;
+                FieldInfo fi = value.GetType().GetField(value.ToString());
+                if (fi == null) return null;
+                DescriptionAttribute[] attributes = fi.GetCustomAttributes(typeof(DescriptionAttribute), false) as DescriptionAttribute[];
 
-            return value.ToString();
+                if (attributes != null && attributes.Any())
+                {
+                    return attributes.First().Description;
+                }
+
+                return value.ToString();
+            }
+            catch (Exception)
+            {
+                return "";
+            }
         }
 
     }

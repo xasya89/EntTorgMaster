@@ -1,8 +1,10 @@
 ﻿@using EntTorgMaster.Data
 @using EntTorgMaster.Services
 @using EntTorgMaster.Helpers
+@using EntTorgMaster.Models
 @using Blazorise.DataGrid
 @using System.Text.Json
+@using AutoMapper
 @inherits OwningComponentBase
 
 
@@ -13,8 +15,20 @@
             <CloseButton Class="btn btn-sm" />
         </ModalHeader>
         <ModalBody>
-
-            <input value=@filterStr @oninput=@(e=>Select(e.Value?.ToString() ?? ""))  class="form-control form-control-sm"/>
+            <div class="row">
+                <div class="col-8">
+                    <input value=@filterStr @oninput=@(e=>Select(e.Value?.ToString() ?? ""))  class="form-control form-control-sm"/>
+                </div>
+                <div class="col-4">
+                    <Select TValue="GoodTypeFilterModel" SelectedValue=@filterGoodType SelectedValueChanged=@(e=>Select((GoodTypeFilterModel)e) ) Class="form-select form-select-sm">
+                        @foreach (Enum opentype in Enum.GetValues(typeof(GoodTypeFilterModel)))
+                                {
+                                    <SelectItem value="@opentype">@opentype.GetEnumDescription()</SelectItem>
+                                }
+                    </Select>
+                </div>
+            </div>
+            
             <DataGrid
                 TItem="Good"
                       Data="@goods"
@@ -28,8 +42,8 @@
                       >
                 <DataGridColumns>
                     <DataGridColumn Field="@nameof(Good.Name)" Caption="Наименование" />
-                    <DataGridColumn Field="@nameof(Good.Unit)" Caption="Ед"  />
-                    <DataGridColumn Field="@nameof(Good.Type)" Caption="Тип"  />
+                    <DataGridColumn Field="@nameof(Good.UnitStr)" Caption="Ед"  />
+                    <DataGridColumn Field="@nameof(Good.TypeStr)" Caption="Тип"  />
                     <DataGridColumn Field="@nameof(Good.Volume)" Caption="Объем" />
                     <DataGridColumn Field="@nameof(Good.isEnable)" Caption="Используется" />
                 </DataGridColumns>
@@ -98,6 +112,7 @@
     public EventCallback<Good> Change{ get; set; }
     [Inject]
     private GoodService _goodService{ get; set; }
+    @inject IMapper mapper
 
     private List<Good> goods { get; set; } = new();
     private Good selectedGood{ get; set; }
@@ -140,6 +155,7 @@
     }
 
     private string filterStr = "";
+    private GoodTypeFilterModel filterGoodType=GoodTypeFilterModel.None;
     private int totalGoods;
     private int pageSelect = 0;
 
@@ -152,18 +168,24 @@
             // this can be call to anything, in this case we're calling a fictional api
             //var response = await Http.GetJsonAsync<Employee[]>( $"some-api/employees?page={e.Page}&pageSize={e.PageSize}" );
             if ( e.ReadDataMode is DataGridReadDataMode.Virtualize )
-                response = (await _goodService.GetGoods(filterStr)).Skip( e.VirtualizeOffset ).Take( e.VirtualizeCount ).ToList();
+                response = goods.Skip( e.VirtualizeOffset ).Take( e.VirtualizeCount ).ToList();
             else if ( e.ReadDataMode is DataGridReadDataMode.Paging )
             {
                 pageSelect = e.Page - 1;
-                response = (await _goodService.GetGoods(filterStr)).Skip( ( pageSelect ) * e.PageSize ).Take( e.PageSize ).ToList();
+                if(filterGoodType==GoodTypeFilterModel.None)
+                    response = (await _goodService.GetGoods(filterStr)).Skip( ( pageSelect ) * e.PageSize ).Take( e.PageSize ).ToList();
+                else
+                    response = (await _goodService.GetGoods(filterStr, mapper.Map<GoodType>(filterGoodType))).Skip( ( pageSelect ) * e.PageSize ).Take( e.PageSize ).ToList();
             }
             else
                 throw new Exception( "Unhandled ReadDataMode" );
 
             if ( !e.CancellationToken.IsCancellationRequested )
             {
-                totalGoods = (await _goodService.GetGoods(filterStr)).Count;
+                if(filterGoodType==GoodTypeFilterModel.None)
+                    totalGoods = (await _goodService.GetGoods(filterStr)).Count;
+                else
+                    totalGoods = (await _goodService.GetGoods(filterStr, mapper.Map<GoodType>(filterGoodType))).Count;
                 goods = new List<Good>( response ); // an actual data for the current page
             }
         }
@@ -174,11 +196,19 @@
         filterStr = value;
         await Select();
     }
+    private async Task Select(GoodTypeFilterModel value)
+    {
+        filterGoodType = value;
+        await Select();
+    }
 
     private async Task Select()
     {
         List<Good> response = null;
-        response = (await _goodService.GetGoods(filterStr)).Skip(pageSelect).Take(5).ToList();
+        if(filterGoodType==GoodTypeFilterModel.None)
+            response = (await _goodService.GetGoods(filterStr)).Skip(pageSelect).Take(5).ToList();
+        else
+            response = (await _goodService.GetGoods(filterStr, mapper.Map<GoodType>(filterGoodType))).Skip(pageSelect).Take(5).ToList();
         totalGoods = (await _goodService.GetGoods(filterStr)).Count;
         goods = new List<Good>(response); // an actual data for the current page
     }
