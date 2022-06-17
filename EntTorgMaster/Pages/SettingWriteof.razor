@@ -1,0 +1,151 @@
+﻿@page "/settingwriteof"
+@using EntTorgMaster.Data
+@using EntTorgMaster.Models
+@using EntTorgMaster.Helpers
+@using System.Text.Json
+@using System.IO;
+@inherits OwningComponentBase
+
+<h3>Настройки списания материала</h3>
+
+<Div Class="row">
+    <Div Class="col-3">
+        <ListGroup Mode="ListGroupMode.Selectable" SelectedItemChanged=@(e=>settingSelectedDoorType=settings[Convert.ToInt32(e)])>
+            @foreach(var doorType in doorTypes)
+            {
+                <ListGroupItem Name="@doorType.Id.ToString()">@doorType.Name</ListGroupItem>
+            }
+        </ListGroup>
+    </Div>
+    <Div Class="col-9" Visibility=@(settingSelectedDoorType==null? Blazorise.Visibility.Invisible : Blazorise.Visibility.Visible)>
+        <Div Class="row">
+            <Div Class="col">
+                <Button Clicked=saveSettings Size=Size.Small Color=Color.Success>
+                    <Icon Name=IconName.Save/>
+                    Сохранить
+                </Button>
+            </Div>
+            <Div Class="col">
+                <Button Clicked=selectSettings Size=Size.Small Color=Color.Danger>
+                    Отмена
+                </Button>
+            </Div>
+            <Div Class="col">
+                <Select TValue=GoodType @bind-SelectedValue=selectedGoodType Class="form-select form-select-sm">
+                    @foreach(Enum goodType in Enum.GetValues<GoodType>())
+                    {
+                        <SelectItem Value=@goodType>@goodType.GetEnumDescription()</SelectItem>
+                    }
+                </Select>
+            </Div>
+            <Div Class="col">
+                <Select TValue=SettingWriteofTypeCalc @bind-SelectedValue=selectedTypeCalc Class="form-select form-select-sm">
+                    @foreach(Enum typeCalc in Enum.GetValues<SettingWriteofTypeCalc>())
+                    {
+                        <SelectItem Value=@typeCalc>@typeCalc.GetEnumDescription()</SelectItem>
+                    }
+                </Select>
+            </Div>
+            <Div Class="col">
+                <Button Clicked=addCalcParam Size=Size.Small Color=Color.Primary>Добавить</Button>
+            </Div>
+        </Div>
+        <Div Class="row">
+            <Div Class="col-12">
+                @if (settingSelectedDoorType != null)
+                    @foreach (var calcParams in settingSelectedDoorType)
+                    {
+                        <div class="card card-sm mt-2">
+                            <div class="card-header">
+                                @calcParams.GoodType.GetEnumDescription()
+                                <Button Clicked=@(()=>settingSelectedDoorType.Remove(calcParams)) Size=Size.Small Color=Color.Link>Удалить</Button>
+                            </div>
+                            <div class="card-body">
+                                @switch (calcParams.TypeCalc)
+                                {
+                                    case SettingWriteofTypeCalc.DoorSize:
+
+                                        break;
+                                    case SettingWriteofTypeCalc.Square:
+                                            <input type="checkbox" @bind-value=@(calcParams.CalcSquare.DoubleCount) cclass="form-check form-check-inline"/>
+                                            <span>Учитывать каждую сторону. Количество на каждый кв.м.</span>
+                                            <input  @bind-value=@(calcParams.CalcSquare.Count)  style="width: 150px"/>
+                                        break;
+                                }
+                            </div>
+                        </div>
+                    }
+            </Div>
+        </Div>
+    </Div>
+</Div>
+
+@code {
+    [Inject]
+    public IDbContextFactory<enttorgsnabContext> _dbFactory{ get; set; }
+    private enttorgsnabContext _db;
+
+    private int? selectTypeDoorId =null;
+    private List<DoorType> doorTypes = new();
+    private Dictionary<int, List<SettingWriteofModel>> settings;
+    private List<SettingWriteofModel> settingSelectedDoorType=null;
+
+
+    private GoodType selectedGoodType;
+    private SettingWriteofTypeCalc selectedTypeCalc;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _db = _dbFactory.CreateDbContext();
+        doorTypes = await _db.DoorTypes.Where(d=>d.Enable==true).ToListAsync();
+        await selectSettings();
+        await base.OnInitializedAsync();
+    }
+
+    private async Task selectSettings()
+    {
+        if (File.Exists("seetingswriteof.json"))
+            using (StreamReader sr = new StreamReader("seetingswriteof.json"))
+            {
+                string settingsstr = await sr.ReadToEndAsync();
+                settings = JsonSerializer.Deserialize<Dictionary<int, List<SettingWriteofModel>>>(settingsstr);
+            }
+        else
+        {
+            settings = new();
+            foreach (var doortype in doorTypes)
+                settings.Add(doortype.Id, new());
+        }
+    }
+
+    private async Task saveSettings()
+    {
+        using (FileStream fs = File.Open("seetingswriteof.json", FileMode.OpenOrCreate))
+            JsonSerializer.Serialize(fs, settings);
+    }
+
+    private void addCalcParam()
+    {
+        SettingWriteofModel settingModal = new SettingWriteofModel
+            {
+                GoodType = selectedGoodType,
+                TypeCalc = selectedTypeCalc
+            };
+        switch (selectedTypeCalc)
+        {
+            case SettingWriteofTypeCalc.DoorSize:
+                settingModal.CalcSize = new();
+                break;
+            case SettingWriteofTypeCalc.Square:
+                settingModal.CalcSquare = new();
+                break;
+            case SettingWriteofTypeCalc.Around:
+                settingModal.CalcAround = new();
+                break;
+            case SettingWriteofTypeCalc.Counter:
+                settingModal.CalcUnit = new();
+                break;
+        }
+        settingSelectedDoorType.Add(settingModal);
+    }
+}

@@ -164,9 +164,6 @@
         if ( !e.CancellationToken.IsCancellationRequested )
         {
             List<Good> response = null;
-
-            // this can be call to anything, in this case we're calling a fictional api
-            //var response = await Http.GetJsonAsync<Employee[]>( $"some-api/employees?page={e.Page}&pageSize={e.PageSize}" );
             if ( e.ReadDataMode is DataGridReadDataMode.Virtualize )
                 response = goods.Skip( e.VirtualizeOffset ).Take( e.VirtualizeCount ).ToList();
             else if ( e.ReadDataMode is DataGridReadDataMode.Paging )
@@ -186,7 +183,7 @@
                     totalGoods = (await _goodService.GetGoods(filterStr)).Count;
                 else
                     totalGoods = (await _goodService.GetGoods(filterStr, mapper.Map<GoodType>(filterGoodType))).Count;
-                goods = new List<Good>( response ); // an actual data for the current page
+                goods = new List<Good>( response );
             }
         }
     }

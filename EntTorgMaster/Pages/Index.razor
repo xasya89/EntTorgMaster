@@ -15,6 +15,18 @@ Welcome to your new app.
 <GoodSelector GoodSelected=@(new Good{Name="Товар"}) />
 <GoodSelector />
 
+<div class="card card-sm">
+  <div class="card-header">
+    Quote
+  </div>
+  <div class="card-body">
+    <blockquote class="blockquote mb-0">
+      <p>A well-known quote, contained in a blockquote element.</p>
+      <footer class="blockquote-footer">Someone famous in <cite title="Source Title">Source Title</cite></footer>
+    </blockquote>
+  </div>
+</div>
+
 <ContractorManual @ref=contractorManual Change=@(c=>contractor=c ) />
 <button @onclick=@(()=>Contractors.Add(new Contractor{OrgName=Contractors.Count.ToString()}))>Add</button>
 <p>@selected</p>
