@@ -64,10 +64,52 @@
                                 @switch (calcParams.TypeCalc)
                                 {
                                     case SettingWriteofTypeCalc.DoorSize:
+                                        <Button Clicked=@(()=>calcParams.CalcSize.DoorSizes.Add(new ())) Size=Size.Small Color="Color.Primary">Добавить</Button>
+                                        <Div Class="table-responsive">
+                                        </Div>
+                                        <table class="table table-sm table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th rowspan="2"></th>
+                                                    <th colspan="2">Высота</th>
+                                                    <th colspan="2">Ширина</th>
+                                                    <th rowspan="2">Двухстворчатая</th>
+                                                    <th rowspan="2">Фрамуга</th>
+                                                    <th rowspan="2">Кол-во</th>
+                                                </tr>
+                                                <tr>
+                                                    <th>с</th>
+                                                    <th>по</th>
+                                                    <th>с</th>
+                                                    <th>по</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach(var doorSizeCalc in calcParams.CalcSize.DoorSizes)
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            <Button Clicked=@(()=>calcParams.CalcSize.DoorSizes.Remove(doorSizeCalc)) Size="Size.Small" Color="Color.Light">
+                                                                <Icon Name="IconName.Delete" TextColor="TextColor.Danger"/>
+                                                            </Button>
+                                                        </td>
+                                                        <td>
 
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
                                         break;
                                     case SettingWriteofTypeCalc.Square:
-                                            <input type="checkbox" @bind-value=@(calcParams.CalcSquare.DoubleCount) cclass="form-check form-check-inline"/>
+                                        @if (calcParams.CalcSquare.DoubleCount)
+                                        {
+                                            <input type="checkbox" checked @onchange=@(_=>calcParams.CalcSquare.DoubleCount=false) cclass="form-check form-check-inline"/>
+                                        }
+                                        else
+                                        {
+                                            <input type="checkbox" @onchange=@(_=>calcParams.CalcSquare.DoubleCount=true) cclass="form-check form-check-inline"/>
+                                        }
                                             <span>Учитывать каждую сторону. Количество на каждый кв.м.</span>
                                             <input  @bind-value=@(calcParams.CalcSquare.Count)  style="width: 150px"/>
                                         break;
@@ -148,4 +190,6 @@
         }
         settingSelectedDoorType.Add(settingModal);
     }
+
+    
 }

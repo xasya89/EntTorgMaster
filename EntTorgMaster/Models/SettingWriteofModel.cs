@@ -34,8 +34,10 @@ namespace EntTorgMaster.Models
     }
     public class SettingWriteofDoorSizeModel
     {
-        public int? H { get; set; }
-        public int? W { get; set; }
+        public int? HWith { get; set; }
+        public int? HBy { get; set; }
+        public int? WWith { get; set; }
+        public int? WBy { get; set; }
         public bool SEqual { get; set; }
         public string SEqualStr
         {
