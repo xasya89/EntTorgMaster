@@ -46,6 +46,7 @@
                     <DataGridColumn Field="@nameof(Good.TypeStr)" Caption="Тип"  />
                     <DataGridColumn Field="@nameof(Good.Volume)" Caption="Объем" />
                     <DataGridColumn Field="@nameof(Good.isEnable)" Caption="Используется" />
+                    <DataGridColumn Field="@nameof(Good.Count)" Caption="Кол-во"/>
                 </DataGridColumns>
                 <ButtonRowTemplate>
                     <Button Color="Color.Success" Clicked=@(async ()=> await addGoodStart())>Добавить</Button>
@@ -110,6 +111,11 @@
 @code{
     [Parameter]
     public EventCallback<Good> Change{ get; set; }
+    [Parameter]
+    public GoodType? FilterGoodType
+    {
+        set => filterGoodType = value is not null ? mapper.Map<GoodTypeFilterModel>(value) : GoodTypeFilterModel.None;
+    }
     [Inject]
     private GoodService _goodService{ get; set; }
     @inject IMapper mapper
@@ -212,6 +218,7 @@
 
     public Task ShowModal()
     {
+        Select();
         return goodModal.Show();
     }
 

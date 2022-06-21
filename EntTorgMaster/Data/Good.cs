@@ -14,7 +14,12 @@ namespace EntTorgMaster.Data
         public decimal? Volume { get; set; }
         public bool isEnable { get; set; } = true;
 
+        public decimal Count { get => GoodBalance?.Count ?? 0; }
+        public decimal Price { get => GoodBalance?.Price ?? 0; }
+
+        public GoodBalance GoodBalance { get; set; }
         public List<ArrivalGood> ArrivalGoods { get; set; } = new List<ArrivalGood>();
+        public List<DoorSpecificationWriteof> DoorSpecificationsWriteof { get; set; } = new();
     }
 
     public enum Unit

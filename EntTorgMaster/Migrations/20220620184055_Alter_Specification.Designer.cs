@@ -3,6 +3,7 @@ using System;
 using EntTorgMaster.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EntTorgMaster.Migrations
 {
     [DbContext(typeof(enttorgsnabContext))]
-    partial class enttorgsnabContextModelSnapshot : ModelSnapshot
+    [Migration("20220620184055_Alter_Specification")]
+    partial class Alter_Specification
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -201,38 +203,6 @@ namespace EntTorgMaster.Migrations
                         .IsUnique();
 
                     b.ToTable("GoodBalances");
-                });
-
-            modelBuilder.Entity("EntTorgMaster.Data.History", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("Create")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Document")
-                        .IsRequired()
-                        .HasColumnType("json");
-
-                    b.Property<int>("DocumentId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("EventType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Histories");
                 });
 
             modelBuilder.Entity("EntTorgMaster.Data.Order", b =>
@@ -437,17 +407,6 @@ namespace EntTorgMaster.Migrations
                     b.Navigation("Good");
                 });
 
-            modelBuilder.Entity("EntTorgMaster.Data.History", b =>
-                {
-                    b.HasOne("EntTorgMaster.Data.User", "User")
-                        .WithMany("Histories")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("EntTorgMaster.Data.OrderDoor", b =>
                 {
                     b.HasOne("EntTorgMaster.Data.DoorType", "DoorType")
@@ -500,11 +459,6 @@ namespace EntTorgMaster.Migrations
             modelBuilder.Entity("EntTorgMaster.Data.OrderDoor", b =>
                 {
                     b.Navigation("DoorSpecificationsWriteof");
-                });
-
-            modelBuilder.Entity("EntTorgMaster.Data.User", b =>
-                {
-                    b.Navigation("Histories");
                 });
 #pragma warning restore 612, 618
         }

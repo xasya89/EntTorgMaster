@@ -102,12 +102,19 @@
     private ArrivalGood selectedPostion = new();
 
 
+    Dictionary<int, decimal> prevGoodCount = new();
+
     protected override async Task OnInitializedAsync()
     {
         _db = dbContextFactory.CreateDbContext();
         if (ArrivalId != null)
+        {
             arrival = await _db.Arrivals.Include(a => a.Contractor).Include(a => a.ArrivalGoods).ThenInclude(ag => ag.Good)
             .Where(a => a.Id == ArrivalId).FirstOrDefaultAsync();
+            foreach (var pos in arrival.ArrivalGoods)
+                if (!prevGoodCount.TryAdd(pos.GoodId, pos.Count))
+                    prevGoodCount[pos.GoodId] += pos.Count;
+        }
     }
 
 
@@ -124,6 +131,18 @@
                 agood.Arrival = arrival;
                 _db.ArrivalGoods.Add(agood);
             }
+
+        foreach (var prevBalance in prevGoodCount)
+            (await _db.GoodBalances.Where(b => b.GoodId == prevBalance.Key).FirstOrDefaultAsync()).Count -= prevBalance.Value;
+
+        foreach (var pos in arrival.ArrivalGoods)
+        {
+            var balance = await _db.GoodBalances.Where(b => b.GoodId == pos.GoodId).FirstOrDefaultAsync();
+            balance.Count += pos.Count;
+            balance.Price = pos.Price;
+        }
+            
+
         await _db.SaveChangesAsync();
         navigationManager.NavigateTo("/arrivals");
     }

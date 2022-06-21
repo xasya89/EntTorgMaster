@@ -53,6 +53,8 @@ namespace EntTorgMaster.Data
         public int? WindowStvorkaCount { get; set; }
         public bool Framuga { get; set; }
         public int? FramugaH { get; set; }
+
+        public List<DoorSpecificationWriteof> DoorSpecificationsWriteof { get; set; } = new();
     }
 
     public enum OpenType
@@ -79,5 +81,16 @@ namespace EntTorgMaster.Data
         No,
         [Description("Нет подг")]
         NoPrepare
+    }
+
+    public class DoorSpecificationWriteof
+    {
+        public int Id { get; set; }
+        public int OrderDoorId { get; set; }
+        public OrderDoor OrderDoor { get; set; }
+        public int? GoodId { get; set; } = null;
+        public Good? Good { get; set; } = null;
+        public GoodType GoodType { get; set; }
+        public decimal Count { get; set; }
     }
 }

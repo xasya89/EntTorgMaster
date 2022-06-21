@@ -5,6 +5,7 @@
 @inject IJSRuntime js
 @inject IDbContextFactory<enttorgsnabContext> dbFactory
 @inject NavigationManager NavigationManager
+@inject CalcSpecificationService calcSpecificationService;
 @implements IDisposable
 
 <Field Style="margin-bottom: 10px">
@@ -12,6 +13,7 @@
     <Button Size=Size.Small Color=Color.Primary>Закрыть</Button>
     <Button Size=Size.Small Color=Color.Danger style="margin: 0 10px">Удалить</Button>
     <Button Clicked="@(()=>{PDFGenerate.GenerateNaryad(js,order);})" Class="btn-sm btn-primary">Печать</Button>
+    <Button Clicked=CalcSpecification Size=Size.Small Color=Color.Danger style="margin: 0 10px">Расчитать спецификацию</Button>
 </Field>
 <Alert @ref=@errorAlert Color=Color.Danger>
     <AlertMessage>
@@ -60,6 +62,7 @@
             <TableHeaderCell ColumnSpan=2>Навесы</TableHeaderCell>
             <TableHeaderCell ColumnSpan=2>Окно</TableHeaderCell>
             <TableHeaderCell ColumnSpan=2>Фрамуга</TableHeaderCell>
+            <TableHeaderCell RowSpan=2></TableHeaderCell>
             <TableHeaderCell RowSpan=2></TableHeaderCell>
         </TableRow>
         <TableRow>
@@ -181,6 +184,9 @@
                 <TableRowCell>
                     <input @bind="door.FramugaH" disabled=@door.Framuga style="width: 50px"/>
                 </TableRowCell>
+                <TableRowCell>
+                    <Button Clicked=@(()=> specificationWriteofComponent.Open(door)) Size=Size.Small Color=Color.Default>...</Button>
+                </TableRowCell>
             </TableRow>
         }
     </TableBody>
@@ -223,6 +229,8 @@
     </ModalContent>
 </Modal>
 
+<SpecificationWriteofComponent @ref=specificationWriteofComponent />
+
 @code {
     [Parameter]
     public string? IdOrder{ get; set; }
@@ -237,6 +245,7 @@
 
     private Modal modalNote;
     private Modal modalMarking;
+    private SpecificationWriteofComponent specificationWriteofComponent;
     private enttorgsnabContext _db;
 
     protected override async Task OnInitializedAsync()
@@ -244,7 +253,7 @@
         _db = dbFactory.CreateDbContext();
         doorNames = await _db.DoorTypes.Where(d=>d.Enable==true).OrderBy(d => d.Name).ToListAsync();
         if (IdOrder != null)
-            order = await _db.Orders.Include(o => o.OrderDoors)
+            order = await _db.Orders.Include(o => o.OrderDoors).ThenInclude(d=>d.DoorSpecificationsWriteof).ThenInclude(s=>s.Good)
             .Where(o => o.Id == int.Parse(IdOrder)).FirstOrDefaultAsync() ?? new();
         //return base.OnInitializedAsync();
     }
@@ -274,7 +283,10 @@
             {
                 door.Order = order;
                 _db.OrderDoors.Add(door);
+                foreach (var spec in door.DoorSpecificationsWriteof)
+                    _db.DoorSpecificationsWriteof.Add(spec);
             }
+
             _db.SaveChanges();
             return;
         }
@@ -295,6 +307,14 @@
     {
         var o=new Order { Shet = order.Shet, ShetDate = order.ShetDate, CustomerName = order.CustomerName, CustomerPhone = order.CustomerPhone, OrderDoors=new List<OrderDoor>() { door} };
         PDFGenerate.GenerateNaryad(js,o);
+    }
+
+    private void CalcSpecification()
+    {
+        foreach (var door in order.OrderDoors)
+        {
+            calcSpecificationService.Calc(door);
+        }
     }
 
     public void Dispose() => _db.Dispose();

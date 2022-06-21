@@ -1,0 +1,101 @@
+﻿@using EntTorgMaster.Data
+@using EntTorgMaster.Helpers
+@inject IDbContextFactory<enttorgsnabContext> _dbFactory
+@inherits OwningComponentBase
+
+<Modal @ref="specModal">
+    <ModalContent Centered Size=ModalSize.Large>
+        <ModalHeader>
+            <ModalTitle>Контрагент</ModalTitle>
+            <CloseButton Class="btn btn-sm" />
+        </ModalHeader>
+        <ModalBody>
+            <Div Class="row mb-2">
+                <Div Class="col-9">
+                    <Select TValue=GoodType @bind-SelectedValue=selectedGoodType Class="form-select form-select-sm">
+                        @foreach(var item in Enum.GetValues<GoodType>())
+                        {
+                            <SelectItem Value=item>@item.GetEnumDescription()</SelectItem>
+                        }
+                    </Select>
+                </Div>
+                <Div Class="col-3">
+                    <Button Clicked=Add Size=Size.Small Color=Color.Primary>Добавить</Button>
+                </Div>
+            </Div>
+            
+            <table class="table table-sm table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Тип</th>
+                        <th>Номенклатура</th>
+                        <th>Кол-во</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var spec in orderDoor.DoorSpecificationsWriteof)
+                    {
+                        <tr>
+                            <td>
+                                <Button Clicked=@(()=>Remove(spec)) Size=Size.Small Color=Color.Light>
+                                    <Icon Name=IconName.Delete />
+                                </Button>
+                            </td>
+                            <td>@spec.GoodType.GetEnumDescription()</td>
+                            <td>
+                                @spec.Good?.Name
+                                &nbsp;
+                                <Button Clicked=@(()=> startChooseGood(spec)) Size=Size.Small Color=Color.Light>
+                                    <Icon Name=IconName.Edit />
+                                </Button>
+                            </td>
+                            <td>
+                                <input @bind-value=spec.Count class="form-control form-control-sm"/>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Primary" Clicked=Close>Закрыть</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+<GoodManual @ref=goodManual Change=@(g=>{selectDoorSpec.GoodId=g.Id; selectDoorSpec.Good=g; })/>
+
+@code {
+    private Modal specModal;
+    private GoodManual goodManual;
+    private OrderDoor orderDoor=new();
+    private GoodType selectedGoodType = GoodType.Metal20;
+    private DoorSpecificationWriteof selectDoorSpec;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var db = _dbFactory.CreateDbContext();
+
+        await base.OnInitializedAsync();
+    }
+
+    public async Task Open(OrderDoor door)
+    {
+        orderDoor = door;
+        await specModal.Show();
+    }
+
+    private async Task Close() => await specModal.Hide();
+
+    private void Add() => orderDoor.DoorSpecificationsWriteof.Add(new DoorSpecificationWriteof { GoodType=selectedGoodType});
+
+    private void Remove(DoorSpecificationWriteof pos) => orderDoor.DoorSpecificationsWriteof.Remove(pos);
+
+    private async Task startChooseGood(DoorSpecificationWriteof spec)
+    {
+        selectDoorSpec = spec;
+        goodManual.FilterGoodType = spec.GoodType;
+        await goodManual.ShowModal();
+    }
+}

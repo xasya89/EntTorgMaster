@@ -13,6 +13,7 @@ namespace EntTorgMaster.Mappings
             CreateMap<NalichnikModelType, NalichnikType>();
             CreateMap<DovodModelType, DovodType>();
             CreateMap<GoodTypeFilterModel, GoodType>();
+            CreateMap<GoodType, GoodTypeFilterModel>();
         }
     }
 }

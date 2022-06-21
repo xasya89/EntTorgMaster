@@ -7,18 +7,20 @@ namespace EntTorgMaster.Services
         public GoodService(IDbContextFactory<enttorgsnabContext> dbFactory)
             => _db = dbFactory.CreateDbContext();
 
-        public async Task<List<Good>> GetGoods() => await _db.Goods.OrderBy(g => g.Name).ToListAsync();
+        public async Task<List<Good>> GetGoods() => await _db.Goods.Include(g=>g.GoodBalance).OrderBy(g => g.Name).ToListAsync();
         public async Task<List<Good>> GetGoods(string name) =>
-            await _db.Goods.Where(g => EF.Functions.Like(g.Name, $"%{name}%")).ToListAsync();
+            await _db.Goods.Include(g => g.GoodBalance).Where(g => EF.Functions.Like(g.Name, $"%{name}%")).ToListAsync();
 
         public async Task<List<Good>> GetGoods(string name, GoodType goodType) =>
-            await _db.Goods.Where(g => EF.Functions.Like(g.Name, $"%{name}%") & g.Type==goodType).ToListAsync();
+            await _db.Goods.Include(g => g.GoodBalance).Where(g => EF.Functions.Like(g.Name, $"%{name}%") & g.Type==goodType).ToListAsync();
 
-        public async Task<Good> GetGood(int id) => await _db.Goods.FindAsync(id);
+        public async Task<Good> GetGood(int id) => 
+            await _db.Goods.Include(g => g.GoodBalance).Where(g=>g.Id==id).FirstOrDefaultAsync();
 
         public async Task AddGood(Good good)
         {
             await _db.Goods.AddAsync(good);
+            await _db.GoodBalances.AddAsync(new GoodBalance { Good = good, Count=0, Price=0 });
             await _db.SaveChangesAsync();
         }
 

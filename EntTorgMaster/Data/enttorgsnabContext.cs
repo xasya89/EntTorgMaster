@@ -11,11 +11,15 @@ namespace EntTorgMaster.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDoor> OrderDoors { get; set; }
         public DbSet<Good> Goods { get; set; }
+        public DbSet<GoodBalance> GoodBalances { get; set; }
+        public DbSet<DoorSpecificationWriteof> DoorSpecificationsWriteof { get; set; }
         public DbSet<User> Users { get; set; }
 
         public DbSet<Contractor> Contractors { get; set; }
         public DbSet<Arrival> Arrivals { get; set; }
         public DbSet<ArrivalGood> ArrivalGoods { get; set; }
+
+        public DbSet<History> Histories { get; set; }
         public enttorgsnabContext()
         {
         }
@@ -47,6 +51,14 @@ namespace EntTorgMaster.Data
                 .HasOne(d => d.DoorType)
                 .WithMany(d => d.OrderDoors)
                 .HasForeignKey(d => d.DoorTypeId);
+            modelBuilder.Entity<DoorSpecificationWriteof>()
+                .HasOne(s => s.OrderDoor)
+                .WithMany(d => d.DoorSpecificationsWriteof)
+                .HasForeignKey(s => s.OrderDoorId);
+            modelBuilder.Entity<DoorSpecificationWriteof>()
+                .HasOne(s => s.Good)
+                .WithMany(s => s.DoorSpecificationsWriteof)
+                .HasForeignKey(s => s.GoodId);
 
             modelBuilder.Entity<ArrivalGood>()
                 .HasOne(a => a.Good)
@@ -60,6 +72,11 @@ namespace EntTorgMaster.Data
                 .HasOne(a => a.Contractor)
                 .WithMany(c => c.Arrivals)
                 .HasForeignKey(a => a.ContractorId);
+
+            modelBuilder.Entity<History>()
+                .HasOne(h => h.User)
+                .WithMany(u => u.Histories)
+                .HasForeignKey(h => h.UserId);
 
             OnModelCreatingPartial(modelBuilder);
         }

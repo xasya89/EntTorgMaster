@@ -3,6 +3,7 @@ using System;
 using EntTorgMaster.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EntTorgMaster.Migrations
 {
     [DbContext(typeof(enttorgsnabContext))]
-    partial class enttorgsnabContextModelSnapshot : ModelSnapshot
+    [Migration("20220621134440_add_history")]
+    partial class add_history
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -214,15 +216,12 @@ namespace EntTorgMaster.Migrations
 
                     b.Property<string>("Document")
                         .IsRequired()
-                        .HasColumnType("json");
+                        .HasColumnType("jsonb");
 
                     b.Property<int>("DocumentId")
                         .HasColumnType("int");
 
                     b.Property<int>("EventType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.Property<int>("UserId")

@@ -9,6 +9,8 @@ namespace EntTorgMaster.Data
         public string Login { get; set; }
         public string Password { get; set; }
         public UserRole Role { get; set; }
+
+        public List<History> Histories { get; set; } = new();
     }
 
     public enum UserRole
