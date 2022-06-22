@@ -37,6 +37,7 @@ namespace EntTorgMaster.Models
             {
                 var token = new SecurityToken
                 {
+                    UserId= user.Id,
                     UserName = LoginDate.UserName,
                     AccessToken = LoginDate.Password,
                     Role = user.Role.ToString(),
@@ -59,6 +60,7 @@ namespace EntTorgMaster.Models
 
     public class SecurityToken
     {
+        public int UserId { get; set; }
         public string UserName { get; set; }
         public string AccessToken { get; set; }
         public string Role { get; set; }

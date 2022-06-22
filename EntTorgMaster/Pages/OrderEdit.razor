@@ -1,5 +1,6 @@
 ﻿@page "/order-edit/{idOrder}"
 @page "/order-edit"
+@using System.Text.Json
 @using EntTorgMaster.Services
 @using EntTorgMaster.Helpers
 @inject IJSRuntime js
@@ -237,6 +238,7 @@
     IEnumerable<DoorType> doorNames = new List<DoorType>();
 
     Order order = new() { DateCreate = DateOnly.FromDateTime(DateTime.Now) };
+    List<History> histories = new();
 
     StringBuilder errors = new();
     Alert errorAlert;
@@ -253,9 +255,12 @@
         _db = dbFactory.CreateDbContext();
         doorNames = await _db.DoorTypes.Where(d=>d.Enable==true).OrderBy(d => d.Name).ToListAsync();
         if (IdOrder != null)
+        {
             order = await _db.Orders.Include(o => o.OrderDoors).ThenInclude(d=>d.DoorSpecificationsWriteof).ThenInclude(s=>s.Good)
-            .Where(o => o.Id == int.Parse(IdOrder)).FirstOrDefaultAsync() ?? new();
-        //return base.OnInitializedAsync();
+                .Where(o => o.Id == int.Parse(IdOrder)).FirstOrDefaultAsync() ?? new();
+            histories = await _db.Histories.Include(h => h.User)
+            .Where(h => h.EventType == HistoryEventType.Order & h.DocumentId == int.Parse(IdOrder)).ToListAsync();
+        };
     }
 
     private void save()
@@ -287,11 +292,17 @@
                     _db.DoorSpecificationsWriteof.Add(spec);
             }
 
-            _db.SaveChanges();
-            return;
         }
-        else
-            _db.SaveChanges();
+        _db.SaveChanges();
+        _db.Histories.Add(new History
+            {
+                UserId = TokenAuthenticationStateProvider.UserId,
+                Status = HistoryStatus.Add,
+                EventType = HistoryEventType.Order,
+                DocumentId = order.Id,
+                Document = JsonSerializer.Serialize(order)
+            });
+        _db.SaveChanges();
         NavigationManager.NavigateTo("orderlist/1");
     }
 

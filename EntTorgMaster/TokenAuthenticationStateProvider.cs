@@ -11,6 +11,7 @@ namespace EntTorgMaster
 {
     public class TokenAuthenticationStateProvider: AuthenticationStateProvider
     {
+        public static int UserId;
         ILocalStorageService _storage;
         public TokenAuthenticationStateProvider(ILocalStorageService storage)
             => _storage = storage;
@@ -28,6 +29,8 @@ namespace EntTorgMaster
                 return returnAnonimus();
             if (string.IsNullOrEmpty(token.AccessToken) || token.ExpireAt < System.DateTime.UtcNow)
                 return returnAnonimus();
+            
+            UserId = token.UserId;
 
             var claims = new List<Claim>()
             {

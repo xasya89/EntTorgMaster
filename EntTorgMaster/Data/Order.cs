@@ -1,12 +1,16 @@
 ﻿using System.ComponentModel;
+using System.Text.Json.Serialization;
+using EntTorgMaster.Helpers;
 
 namespace EntTorgMaster.Data
 {
     public class Order
     {
         public int Id { get; set; }
+        [JsonConverter(typeof(DateOnlyConverter))]
         public DateOnly DateCreate { get; set; }
         public string Shet { get; set; } = "";
+        [JsonConverter(typeof(DateOnlyConverter))]
         public DateOnly? ShetDate { get; set; }
         public string CustomerName { get; set; } = "";
         public string CustomerPhone { get; set; } = "";
@@ -31,6 +35,7 @@ namespace EntTorgMaster.Data
     {
         public int Id { get; set; }
         public int OrderId { get; set; }
+        [JsonIgnore]
         public Order Order { get; set; }
         public int Position { get; set; }
         public int DoorTypeId { get; set; }
@@ -87,6 +92,7 @@ namespace EntTorgMaster.Data
     {
         public int Id { get; set; }
         public int OrderDoorId { get; set; }
+        [JsonIgnore]
         public OrderDoor OrderDoor { get; set; }
         public int? GoodId { get; set; } = null;
         public Good? Good { get; set; } = null;
