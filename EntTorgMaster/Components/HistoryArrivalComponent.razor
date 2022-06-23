@@ -1,0 +1,47 @@
+﻿<Fields>
+        <Field ColumnSize="ColumnSize.Is4.OnDesktop">
+            <FieldLabel>№</FieldLabel>
+            <TextEdit @bind-Text=@Arrival.Num Size=Size.Small/>
+        </Field>
+            <Field ColumnSize="ColumnSize.Is4.OnDesktop">
+                <FieldLabel>Дата</FieldLabel>
+                <DateEdit @bind-Date=@Arrival.DateArrival Size=Size.Small/>
+            </Field>
+            <Field ColumnSize="ColumnSize.Is4.OnDesktop">
+                <FieldLabel>Поставщик</FieldLabel>
+                <TextEdit Text=@Arrival.Contractor?.OrgName Size=Size.Small/>
+            </Field>
+        </Fields>
+        <table class="table table-sm table-bordered">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Номенклатура</th>
+                    <th>Ед</th>
+                    <th>Кол-во</th>
+                    <th>Цена</th>
+                    <th>Сумма</th>
+                </tr>
+            </thead>
+            <tbody>
+                @code{
+                int numPP=1;
+            }
+                @foreach(var aGood in Arrival.ArrivalGoods)
+                {
+
+                    <tr>
+                        <td>@aGood.Position</td>
+                        <td>@aGood.Good?.Name</td>
+                        <td>@aGood.Good?.UnitStr</td>
+                        <td><input @bind-value=@aGood.Count class="form-control form-control-sm" /></td>
+                        <td><input @bind-value=@aGood.Price class="form-control form-control-sm" /></td>
+                        <td><input value=@aGood.Sum class="form-control form-control-sm" /></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+@code{
+    [Parameter]
+    public Arrival Arrival { get; set; }
+}

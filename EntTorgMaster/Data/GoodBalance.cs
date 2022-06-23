@@ -1,4 +1,6 @@
-﻿namespace EntTorgMaster.Data
+﻿using System.Text.Json.Serialization;
+
+namespace EntTorgMaster.Data
 {
     public class GoodBalance
     {

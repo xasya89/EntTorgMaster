@@ -14,7 +14,8 @@
     <Button Size=Size.Small Color=Color.Primary>Закрыть</Button>
     <Button Size=Size.Small Color=Color.Danger style="margin: 0 10px">Удалить</Button>
     <Button Clicked="@(()=>{PDFGenerate.GenerateNaryad(js,order);})" Class="btn-sm btn-primary">Печать</Button>
-    <Button Clicked=CalcSpecification Size=Size.Small Color=Color.Danger style="margin: 0 10px">Расчитать спецификацию</Button>
+    <Button Clicked=CalcSpecification Size=Size.Small Color=Color.Primary style="margin: 0 10px">Расчитать спецификацию</Button>
+    <Button Clicked=@NavigateToOrderHistory Size=Size.Small Color=Color.Primary style="margin: 0 10px">История</Button>
 </Field>
 <Alert @ref=@errorAlert Color=Color.Danger>
     <AlertMessage>
@@ -329,4 +330,10 @@
     }
 
     public void Dispose() => _db.Dispose();
+
+    private void NavigateToOrderHistory()
+    {
+        if (order.Id != 0)
+            NavigationManager.NavigateTo($"/history/{(int)HistoryEventType.Order}/{order.Id}");
+    }
 }

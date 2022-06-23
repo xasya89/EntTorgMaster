@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using EntTorgMaster.Helpers;
+using System.Text.Json.Serialization;
 
 namespace EntTorgMaster.Data
 {
@@ -17,8 +18,11 @@ namespace EntTorgMaster.Data
         public decimal Count { get => GoodBalance?.Count ?? 0; }
         public decimal Price { get => GoodBalance?.Price ?? 0; }
 
+        [JsonIgnore]
         public GoodBalance GoodBalance { get; set; }
+        [JsonIgnore]
         public List<ArrivalGood> ArrivalGoods { get; set; } = new List<ArrivalGood>();
+        [JsonIgnore]
         public List<DoorSpecificationWriteof> DoorSpecificationsWriteof { get; set; } = new();
     }
 

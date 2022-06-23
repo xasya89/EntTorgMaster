@@ -1,5 +1,6 @@
 ﻿@page "/arrival/{arrivalid:int?}"
 @attribute [Authorize]
+@using System.Text.Json
 @using EntTorgMaster.Data
 @using EntTorgMaster.Components
 @using EntTorgMaster.Helpers
@@ -11,6 +12,11 @@
 </Button>
 <Button Size=Size.Small Color=Color.Danger>
     Закрыть
+</Button>
+
+
+<Button Clicked=NavigateToHistory Size=Size.Small Color=Color.Primary>
+    История
 </Button>
 
 <Validations Model=@arrival>
@@ -141,9 +147,18 @@
             balance.Count += pos.Count;
             balance.Price = pos.Price;
         }
-            
+
 
         await _db.SaveChangesAsync();
+        _db.Histories.Add(new History
+            {
+                UserId = TokenAuthenticationStateProvider.UserId,
+                Status = HistoryStatus.Add,
+                EventType = HistoryEventType.Arrival,
+                DocumentId = arrival.Id,
+                Document = JsonSerializer.Serialize(arrival)
+            });
+        _db.SaveChanges();
         navigationManager.NavigateTo("/arrivals");
     }
 
@@ -170,4 +185,10 @@
     }
 
     private async Task removePosition(ArrivalGood arrivalGood) => arrival.ArrivalGoods.Remove(arrivalGood);
+
+    private void NavigateToHistory()
+    {
+        if (arrival.Id != 0)
+            navigationManager.NavigateTo($"/history/{(int)HistoryEventType.Arrival}/{arrival.Id}");
+    }
 }

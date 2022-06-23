@@ -1,5 +1,6 @@
 ﻿@page "/history/{eventTypeInt:int?}/{documentId:int?}"
 @using System.Text.Json
+@using EntTorgMaster.Helpers
 @inherits OwningComponentBase
 
 <h3>История</h3>
@@ -17,20 +18,10 @@
         @switch (selectedHIstory?.EventType)
         {
             case HistoryEventType.Order:
-                <div Class="row g-3 align-content-center mb-3">
-                    <div class="col-auto">
-                        <Label>Счет</Label>
-                    </div>
-                    <div class="col-auto">
-                        @selectedAsOrder.Shet
-                    </div>
-                    <div class="col-auto">
-                        <Label>Дата</Label>
-                    </div>
-                    <div class="col-auto">
-                        @selectedAsOrder.ShetDate?.ToString("dd.MM.yy")
-                    </div>
-                </div>
+                <HistoryOrderComponent Order=selectedAsOrder />
+                break;
+            case HistoryEventType.Arrival:
+                <HistoryArrivalComponent Arrival=selectedArrival />
                 break;
         }
     </Div>
@@ -49,6 +40,7 @@
     private List<History> histories = new();
     private History selectedHIstory;
     private Order selectedAsOrder;
+    private Arrival selectedArrival;
 
     protected override async Task OnInitializedAsync()
     {
@@ -62,7 +54,15 @@
     private void ChangeSelected(int id)
     {
         var history=histories.Where(h => h.Id == id).FirstOrDefault();
-        selectedAsOrder = JsonSerializer.Deserialize<Order>(history.Document);
+        switch (history.EventType)
+        {
+            case HistoryEventType.Order:
+                selectedAsOrder = JsonSerializer.Deserialize<Order>(history.Document);
+                break;
+            case HistoryEventType.Arrival:
+                selectedArrival = JsonSerializer.Deserialize<Arrival>(history.Document);
+                break;
+        }
         selectedHIstory = history;
     }
 }

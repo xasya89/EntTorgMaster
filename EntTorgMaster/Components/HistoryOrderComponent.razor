@@ -1,0 +1,182 @@
+﻿@using EntTorgMaster.Helpers
+<div Class="row g-3 align-content-center mb-3">
+    <div class="col-auto">
+        <Label>Счет</Label>
+    </div>
+    <div class="col-auto">
+        @Order.Shet
+    </div>
+    <div class="col-auto">
+        <Label>Дата</Label>
+    </div>
+    <div class="col-auto">
+        @Order.ShetDate?.ToString("dd.MM.yy")
+    </div>
+</div>
+<div class="row">
+    <Div Class="col-2">
+        Заказчик
+    </Div>
+    <Div Class="col-10">
+        @Order.CustomerName
+    </Div>
+</div>
+<div class="row">
+    <Div Class="col-2">
+        Примечание
+    </Div>
+    <Div Class="col-10">
+        @Order.Note
+    </Div>
+</div>
+<Tabs SelectedTab="doors">
+    <Items>
+        <Tab Name="doors">Позиции</Tab>
+        <Tab Name="spec">Спецификация</Tab>
+    </Items>
+    <Content>
+        <TabPanel Name="doors" >
+            <Table Responsive=true Bordered=true Narrow=true>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell RowSpan=2>#</TableHeaderCell>
+                            <TableHeaderCell RowSpan=2>Наименование</TableHeaderCell>
+                            <TableHeaderCell RowSpan=2>Кол-во</TableHeaderCell>
+                            <TableHeaderCell RowSpan=2>Ширина</TableHeaderCell>
+                            <TableHeaderCell RowSpan=2>Высота</TableHeaderCell>
+                            <TableHeaderCell RowSpan=2>Открывание</TableHeaderCell>
+                            <TableHeaderCell RowSpan=2>Раб. ств.</TableHeaderCell>
+                            <TableHeaderCell RowSpan=2>RAL</TableHeaderCell>
+                            <TableHeaderCell RowSpan=2>Наличник</TableHeaderCell>
+                            <TableHeaderCell RowSpan=2>Доводчик</TableHeaderCell>
+                            <TableHeaderCell RowSpan=2>Прим</TableHeaderCell>
+                            <TableHeaderCell RowSpan=2>Марк</TableHeaderCell>
+                            <TableHeaderCell RowSpan=2>Шильда</TableHeaderCell>
+                            <TableHeaderCell ColumnSpan=2>Навесы</TableHeaderCell>
+                            <TableHeaderCell ColumnSpan=2>Окно</TableHeaderCell>
+                            <TableHeaderCell ColumnSpan=2>Фрамуга</TableHeaderCell>
+                            <TableHeaderCell RowSpan=2></TableHeaderCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableHeaderCell>Раб.</TableHeaderCell>
+                            <TableHeaderCell>Вт.</TableHeaderCell>
+                            <TableHeaderCell>Раб.</TableHeaderCell>
+                            <TableHeaderCell>Вт.</TableHeaderCell>
+                            <TableHeaderCell>Наличие</TableHeaderCell>
+                            <TableHeaderCell>Высота</TableHeaderCell>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        @foreach (OrderDoor door in Order.OrderDoors)
+                        {
+                            <TableRow>
+                                <TableRowCell>@(door.Position)</TableRowCell>
+                                <TableRowCell>
+                                    @door.DoorType?.Name
+                                </TableRowCell>
+                                <TableRowCell>
+                                    @door.Count
+                                </TableRowCell>
+                                <TableRowCell>
+                                    @door.H
+                                </TableRowCell>
+                                <TableRowCell>
+                                    @door.W
+                                </TableRowCell>
+                                <TableRowCell>
+                                    @door.Open.GetEnumDescription()
+                                </TableRowCell>
+                                <TableRowCell class="d-inline-flex">
+                                    @if (door.SEqual)
+                                    {
+                                        <Span>Равн</Span>
+                                    }
+                                    else
+                                        @door.S
+                                </TableRowCell>
+                                <TableRowCell>
+                                    @door.Ral
+                                </TableRowCell>
+                                <TableRowCell>
+                                    @door.Nalichnik.GetEnumDescription()
+                                </TableRowCell>
+                                <TableRowCell>
+                                    @door.Dovod.GetEnumDescription()
+                                </TableRowCell>
+                                <TableRowCell>
+                                    @if (door.Note != null)
+                                    {
+                                        @door.Note.Substring(0, door.Note.Length<= 200? door.Note.Length : 200)
+                                    }
+                                </TableRowCell>
+                                <TableRowCell>
+                                    @if (door.Marking != null)
+                                    {
+                                        @door.Marking.Substring(0, door.Marking.Length<= 200? door.Marking.Length : 200)
+                                    }
+                                </TableRowCell>
+                                <TableRowCell>
+                                    @door.Shild
+                                </TableRowCell>
+                                <TableRowCell>
+                                    @door.NavesCount
+                                </TableRowCell>
+                                <TableRowCell>
+                                    @door.NavesStvorkaCount
+                                </TableRowCell>
+                                <TableRowCell>
+                                    @door.WindowCount
+                                </TableRowCell>
+                                <TableRowCell>
+                                    @door.WindowStvorkaCount
+                                </TableRowCell>
+                                <TableRowCell>
+                                    @door.Framuga
+                                </TableRowCell>
+                                <TableRowCell>
+                                    @door.FramugaH
+                                </TableRowCell>
+                            </TableRow>
+                        }
+                    </TableBody>
+                </Table>
+        </TabPanel>
+        <TabPanel Name="spec">
+            @foreach(var door in Order.OrderDoors)
+            {
+                <Div Class="row mb-2">
+                    <Label># @door.Position - @door.DoorType?.Name (@door.H x @door.W @(door.SEqual ? "x равн" : (door.S!=null ? $"x {door.S}" : "")))</Label>
+                    @if(door.DoorSpecificationsWriteof.Count > 0)
+                    {
+                        <Div Class="table-responsive">
+                            <Table Class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Тип</th>
+                                        <th>Номенклатура</th>
+                                        <th>Кол-во</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach(var spec in door.DoorSpecificationsWriteof)
+                                    {
+                                        <tr>
+                                            <td>@spec.GoodType.GetEnumDescription()</td>
+                                            <td>@spec.Good?.Name</td>
+                                            <td>@spec.Count</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </Table>
+                        </Div>
+                    }
+                </Div>
+            }
+        </TabPanel>
+    </Content>
+</Tabs>
+
+@code{
+    [Parameter]
+    public Order Order { get; set; }
+}

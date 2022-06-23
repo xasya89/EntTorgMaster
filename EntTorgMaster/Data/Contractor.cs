@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace EntTorgMaster.Data
@@ -18,6 +19,7 @@ namespace EntTorgMaster.Data
         public string? Mail { get; set; }
         public string? Note { get; set; }
 
+        [JsonIgnore]
         public List<Arrival> Arrivals { get; set; } = new();
     }
 }
