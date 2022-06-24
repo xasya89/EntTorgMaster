@@ -17,14 +17,14 @@ namespace EntTorgMaster.Models
 
     public enum SettingWriteofTypeCalc
     {
-        [Description("Размеры")]
-        DoorSize,
         [Description("Площадь")]
         Square,
         [Description("Периметр")]
         Around,
         [Description("Ед. изделия")]
-        Counter
+        Counter,
+        [Description("Размеры")]
+        DoorSize
     }
 
     // Размеры
@@ -45,25 +45,25 @@ namespace EntTorgMaster.Models
             set => SEqual = value == "Двух. ств." ? true : false;
         }
         public bool Framug { get; set; }
-        public decimal Count { get; set; }
+        public decimal Count { get; set; } = 0;
     }
 
     // Площадь
     public class SettingWriteofSquareModel
     {
         public bool DoubleCount { get; set; }
-        public decimal Count { get; set; }
+        public decimal Count { get; set; } = 0;
     }
 
     //Периметр
     public class SettingWriteofAroundModel
     {
-        public bool DoubleCount { get; set; }
+        public decimal Count { get; set; } = 0;
     }
 
     //Изделие
     public class SettingWriteofUnitModel
     {
-        public decimal Count { get; set; }
+        public decimal Count { get; set; } = 0;
     }
 }

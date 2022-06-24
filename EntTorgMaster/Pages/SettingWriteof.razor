@@ -57,6 +57,21 @@
                     {
                         <div class="card card-sm mt-2">
                             <div class="card-header">
+                                @switch (calcParams.TypeCalc)
+                                {
+                                    case SettingWriteofTypeCalc.DoorSize:
+                                        <Strong>Размеры </Strong>
+                                        break;
+                                    case SettingWriteofTypeCalc.Square:
+                                        <Strong>Плщадь </Strong>
+                                        break;
+                                    case SettingWriteofTypeCalc.Around:
+                                        <Strong>Периметр </Strong>
+                                        break;
+                                    case SettingWriteofTypeCalc.Counter:
+                                        <Strong>Кол-во </Strong>
+                                        break;
+                                }
                                 @calcParams.GoodType.GetEnumDescription()
                                 <Button Clicked=@(()=>settingSelectedDoorType.Remove(calcParams)) Size=Size.Small Color=Color.Link>Удалить</Button>
                             </div>
@@ -111,7 +126,13 @@
                                             <input type="checkbox" @onchange=@(_=>calcParams.CalcSquare.DoubleCount=true) cclass="form-check form-check-inline"/>
                                         }
                                             <span>Учитывать каждую сторону. Количество на каждый кв.м.</span>
-                                            <input  @bind-value=@(calcParams.CalcSquare.Count)  style="width: 150px"/>
+                                        <input  @bind-value=@(calcParams.CalcSquare.Count)  style="width: 150px"/>
+                                        break;
+                                    case SettingWriteofTypeCalc.Around:
+                                        <input  @bind-value=@(calcParams.CalcAround.Count)  style="width: 150px"/>
+                                        break;
+                                    case SettingWriteofTypeCalc.Counter:
+                                        <input  @bind-value=@(calcParams.CalcUnit.Count)  style="width: 150px"/>
                                         break;
                                 }
                             </div>

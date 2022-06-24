@@ -46,6 +46,12 @@ namespace EntTorgMaster.Services
                         case SettingWriteofTypeCalc.Square:
                             countWriteOf = door.H * door.W * (setting.CalcSquare.DoubleCount ? 2 : 1) * setting.CalcSquare.Count * 0.000001M;
                             break;
+                        case SettingWriteofTypeCalc.Around:
+                            countWriteOf = (door.H + door.W) * 2 * setting.CalcAround.Count;
+                            break;
+                        case SettingWriteofTypeCalc.Counter:
+                            countWriteOf = setting.CalcUnit.Count;
+                            break;
                     }
                     door.DoorSpecificationsWriteof.Add(new DoorSpecificationWriteof
                     {
