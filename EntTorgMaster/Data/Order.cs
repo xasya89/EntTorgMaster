@@ -58,6 +58,7 @@ namespace EntTorgMaster.Data
         public int? WindowStvorkaCount { get; set; }
         public bool Framuga { get; set; }
         public int? FramugaH { get; set; }
+        public bool InEnterprise { get; set; } = false;
 
         public List<DoorSpecificationWriteof> DoorSpecificationsWriteof { get; set; } = new();
     }

@@ -7,7 +7,10 @@
 @inject IDbContextFactory<enttorgsnabContext> dbFactory
 @inject NavigationManager NavigationManager
 @inject CalcSpecificationService calcSpecificationService;
+@inject IMessageService messageService;
 @implements IDisposable
+
+
 
 <Field Style="margin-bottom: 10px">
     <Button Clicked=save Size=Size.Small Color=Color.Success>Сохранить</Button>
@@ -64,8 +67,6 @@
             <TableHeaderCell ColumnSpan=2>Навесы</TableHeaderCell>
             <TableHeaderCell ColumnSpan=2>Окно</TableHeaderCell>
             <TableHeaderCell ColumnSpan=2>Фрамуга</TableHeaderCell>
-            <TableHeaderCell RowSpan=2></TableHeaderCell>
-            <TableHeaderCell RowSpan=2></TableHeaderCell>
         </TableRow>
         <TableRow>
             <TableHeaderCell>Раб.</TableHeaderCell>
@@ -79,7 +80,7 @@
     <TableBody>
         @foreach (OrderDoor door in order.OrderDoors)
         {
-            <TableRow>
+            <TableRow Color=@(door.InEnterprise ? Color.Success : Color.Light)>
                 <TableRowCell>
                     <Dropdown>
                         <DropdownToggle Color="Color.Primary" Size=Size.Small>
@@ -89,6 +90,16 @@
                             <DropdownItem Clicked=@(()=>DeletePosition(door))>Удалить</DropdownItem>
                             <DropdownDivider />
                             <DropdownItem Clicked=@(()=>PrintOne(door))>Печать</DropdownItem>
+                            <DropdownItem Clicked=@(()=> specificationWriteofComponent.Open(door))>Спецификация</DropdownItem>
+                            <DropdownItem Clicked=@(()=>SendInEnterprise(door)) >
+                                @if(door.InEnterprise){
+                                    <span>Из производства</span>
+                                }
+                                else
+                                {
+                                    <span>В производство</span>
+                                }
+                             </DropdownItem>
                         </DropdownMenu>
                     </Dropdown>
                 </TableRowCell>
@@ -186,9 +197,6 @@
                 <TableRowCell>
                     <input @bind="door.FramugaH" disabled=@door.Framuga style="width: 50px"/>
                 </TableRowCell>
-                <TableRowCell>
-                    <Button Clicked=@(()=> specificationWriteofComponent.Open(door)) Size=Size.Small Color=Color.Default>...</Button>
-                </TableRowCell>
             </TableRow>
         }
     </TableBody>
@@ -250,6 +258,8 @@
     private Modal modalMarking;
     private SpecificationWriteofComponent specificationWriteofComponent;
     private enttorgsnabContext _db;
+    private Dictionary<int, decimal> goodToWriteOf = new();
+    private Dictionary<int, decimal> goodToCancelWriteOf = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -292,8 +302,8 @@
                 foreach (var spec in door.DoorSpecificationsWriteof)
                     _db.DoorSpecificationsWriteof.Add(spec);
             }
-
         }
+
         _db.SaveChanges();
         _db.Histories.Add(new History
             {
@@ -335,5 +345,39 @@
     {
         if (order.Id != 0)
             NavigationManager.NavigateTo($"/history/{(int)HistoryEventType.Order}/{order.Id}");
+    }
+
+    async Task  SendInEnterprise(OrderDoor door)
+    {
+        string msgText = $"Отправить {door.Position} позицию в производство?";
+        if (door.InEnterprise)
+            msgText = $"Вернуть {door.Position} позицию из производства?";
+        if ( await messageService.Confirm( msgText, "", opt=> {
+            opt.MessageIcon = null;
+            opt.ShowMessageIcon = false;
+            opt.OkButtonText="Да";
+            opt.CancelButtonText = "Нет";
+        } ) )
+        {
+            if(door.DoorSpecificationsWriteof.Where(s=>s.GoodId == null).Count() > 0)
+            {
+                await messageService.Error("В спецификации не выбран товар");
+                return;
+            }
+            door.InEnterprise = !door.InEnterprise;
+            if (order.OrderDoors.Where(d => d.InEnterprise == true).Count()>0)
+                order.Status = OrderStatus.Work;
+            if (order.OrderDoors.Where(d => d.InEnterprise == true).Count()==0)
+                order.Status = OrderStatus.New;
+
+            if (door.InEnterprise)
+                foreach(var spec in door.DoorSpecificationsWriteof.Where(s=>s.GoodId!=null).ToList())
+                    if(!goodToWriteOf.TryAdd((int)spec.GoodId,spec.Count))
+                        goodToWriteOf[(int)spec.GoodId]+=spec.Count;
+            if (door.InEnterprise==false)
+                foreach(var spec in door.DoorSpecificationsWriteof.Where(s=>s.GoodId!=null).ToList())
+                    if(!goodToCancelWriteOf.TryAdd((int)spec.GoodId,spec.Count))
+                        goodToCancelWriteOf[(int)spec.GoodId]+=spec.Count;
+        };
     }
 }
