@@ -274,7 +274,7 @@
         };
     }
 
-    private void save()
+    private async void save()
     {
         errors.Clear();
         if (order.Shet == string.Empty)
@@ -303,8 +303,17 @@
                     _db.DoorSpecificationsWriteof.Add(spec);
             }
         }
-
         _db.SaveChanges();
+        foreach(var goodWriteof in goodToCancelWriteOf)
+        {
+            var balance = await _db.GoodBalances.Where(g => g.GoodId == goodWriteof.Key).FirstOrDefaultAsync();
+            balance.Count += goodWriteof.Value;
+        }
+        foreach(var goodWriteof in goodToWriteOf)
+        {
+            var balance = await _db.GoodBalances.Where(g => g.GoodId == goodWriteof.Key).FirstOrDefaultAsync();
+            balance.Count -= goodWriteof.Value;
+        }
         _db.Histories.Add(new History
             {
                 UserId = TokenAuthenticationStateProvider.UserId,
@@ -359,6 +368,17 @@
             opt.CancelButtonText = "Нет";
         } ) )
         {
+            if(door.DoorSpecificationsWriteof.Count==0)
+                if (await messageService.Confirm( "В позиции не расчитана спецификация. Отменить запуск в производство", "", opt=> {
+                    opt.MessageIcon = null;
+                    opt.ShowMessageIcon = false;
+                    opt.OkButtonText="Да";
+                    opt.CancelButtonText = "Нет";
+                } ))
+                {
+                    return;
+                }
+                
             if(door.DoorSpecificationsWriteof.Where(s=>s.GoodId == null).Count() > 0)
             {
                 await messageService.Error("В спецификации не выбран товар");
