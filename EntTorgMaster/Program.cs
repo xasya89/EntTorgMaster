@@ -71,6 +71,5 @@ app.UseRouting();
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
-ImageGenerate.Create(new OrderDoor {H=2010, W=1800, Open=OpenType.Right, SEqual=true, FramugaH=400, NavesCount=3, NavesStvorkaCount=4 });
 
 app.Run();

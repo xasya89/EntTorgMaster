@@ -50,7 +50,8 @@ namespace EntTorgMaster.Services
                     imageContext.Flip(FlipMode.Vertical);
                     //imageContext.Rotate(180);
                 });
-                img.SaveAsPng(@"d:\1.png");
+                string rootpath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "uploads","1.png");
+                img.SaveAsPng(rootpath);
             };
         }
 

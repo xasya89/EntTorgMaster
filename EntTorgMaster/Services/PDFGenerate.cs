@@ -57,8 +57,8 @@ namespace EntTorgMaster.Services
                     pdf.Add(pDoorName);
 
 
-
-                    iTextSharp.text.Image image = iTextSharp.text.Image.GetInstance(@"d:\1.png");
+                    string rootpath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "uploads", "1.png");
+                    iTextSharp.text.Image image = iTextSharp.text.Image.GetInstance(rootpath);
 
                     Table table = new Table(2);
                     table.Width = 100;
