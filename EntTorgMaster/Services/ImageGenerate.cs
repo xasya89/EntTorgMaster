@@ -15,19 +15,62 @@ namespace EntTorgMaster.Services
         {
             Door door = new Door(orderDoor);
             door.FramugaH = door.FramugaH == null ? null : 130 * door.FramugaH / door.H;
-            door.W = 130 * door.W / door.H;
-            door.H = 130;
+            door.W = 130;
+            door.H = 200;
+
             door.S = door.S == null ? null : 130 * door.S / door.H;
             if(door.SEqual)
                 door.S = (130 * door.W /2) / door.H;
             //door.H = door.H - door.FramugaH ?? 0;
-            int h= (door.H + 20) + (door.FramugaH ?? 0);
-            using (Image<La32> img = new Image<La32>(door.W + 20, h))
+            int h = door.Framuga ? 170 : 200;
+            using (Image<La32> img = new Image<La32>(door.W + 20, door.H+20))
             {
                 img.Mutate(imageContext =>
                 {
                     imageContext.BackgroundColor(Color.Transparent);
-                    drawRect(imageContext, new PointF(10, 10), new Point(door.W, door.H));
+                    drawRect(imageContext, new PointF(10, 10), new Point(door.W, h));
+                    if(door.Framuga)
+                        drawRect(imageContext, new PointF(10, h+10), new Point(door.W, 30));
+                    int xDoorLock = 0;
+                    int xNaves = 10;
+                    int xNavesStvorka = 10;
+                    if(door.S!=null || door.SEqual)
+                        switch (door.Open)
+                        {
+                            case OpenType.Right:
+                                drawRect(imageContext, new PointF(10, 10), new Point(90, h));
+                                xDoorLock = 10 + 80;
+                                xNaves = 10;
+                                xNavesStvorka = 10 +130;
+                                break;
+                            case OpenType.Left:
+                                drawRect(imageContext, new PointF(10+40, 10), new Point(90, h));
+                                xDoorLock = 10 + 50;
+                                xNaves = 10 + 130;
+                                xNavesStvorka = 10;
+                                break;
+                        }
+                    else
+                        switch (door.Open)
+                        {
+                            case OpenType.Right:
+                                xDoorLock = 10 + 120;
+                                xNaves= 10;
+                                break;
+                            case OpenType.Left:
+                                xDoorLock = 10 +10;
+                                xNaves = 10 + 130;
+                                break;
+                        }
+                    imageContext.DrawLines(linePen, new PointF[] {
+                            new PointF(xDoorLock,h/2-8),
+                            new PointF(xDoorLock,h/2+8),
+                        });
+                    if(door.NavesCount!=null)
+                        drawNaves(imageContext, new PointF(xNaves, 10), h, door.NavesCount ?? 0);
+                    if (door.NavesStvorkaCount != null)
+                        drawNaves(imageContext, new PointF(xNavesStvorka, 10), h, door.NavesStvorkaCount ?? 0);
+                    /*
                     if (door.NavesCount != null)
                         drawNaves(imageContext, new PointF(door.Open == OpenType.Left ? door.W + 10 : 10, 10), door.H, door.NavesCount ?? 0);
                     if (door.S == null)
@@ -49,6 +92,8 @@ namespace EntTorgMaster.Services
                         drawRect(imageContext, new PointF(10, door.H + 10), new Point(door.W, door.FramugaH ?? 0));
                     imageContext.Flip(FlipMode.Vertical);
                     //imageContext.Rotate(180);
+                    */
+                    imageContext.Rotate(180);
                 });
                 string rootpath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "uploads","1.png");
                 img.SaveAsPng(rootpath);

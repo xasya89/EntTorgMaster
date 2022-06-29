@@ -1,40 +1,6 @@
 ﻿@page "/"
 <PageTitle>Index</PageTitle>
 
-<h1>Hello, world!</h1>
 
-Welcome to your new app.
-
-<input value=@contractor?.OrgName  class="form-control form-control-sm"/>
-<button @onclick=@(async ()=> await contractorManual?.ShowModal())>2323</button>
-
-<SurveyPrompt Title="How is Blazor working for you?" />
-
-<GoodSelector GoodSelected=@(new Good{Name="Товар"}) />
-<GoodSelector />
-<GoodSelector GoodSelected=@(new Good{Name="Товар"}) />
-<GoodSelector />
-
-<div class="card card-sm">
-  <div class="card-header">
-    Quote
-  </div>
-  <div class="card-body">
-    <blockquote class="blockquote mb-0">
-      <p>A well-known quote, contained in a blockquote element.</p>
-      <footer class="blockquote-footer">Someone famous in <cite title="Source Title">Source Title</cite></footer>
-    </blockquote>
-  </div>
-</div>
-
-<ContractorManual @ref=contractorManual Change=@(c=>contractor=c ) />
-<button @onclick=@(()=>Contractors.Add(new Contractor{OrgName=Contractors.Count.ToString()}))>Add</button>
-<p>@selected</p>
 @code{
-    private string selected { get; set; }
-    private ContractorManual contractorManual;
-
-    private Contractor? contractor{ get; set; }
-
-    private List<Contractor> Contractors { get; set; } = new();
 }
