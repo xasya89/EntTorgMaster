@@ -2,18 +2,87 @@
 
 <PageTitle>EntTorgMaster</PageTitle>
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<header class="p-3 bg-dark text-white">
+      <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+        <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none"  style="width: 280px;">
+          Ent Торгснаб
+        </a>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+        <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+          <li>
+              <Button Clicked=NavMenuShowing TextColor=TextColor.White>
+                <Icon Name=IconName.Bars/>
+            </Button>
+          </li>
+          <!--
+          <li><a href="#" class="nav-link px-2 text-secondary">Home</a></li>
+          <li><a href="#" class="nav-link px-2 text-white">Features</a></li>
+          <li><a href="#" class="nav-link px-2 text-white">Pricing</a></li>
+          <li><a href="#" class="nav-link px-2 text-white">FAQs</a></li>
+          <li><a href="#" class="nav-link px-2 text-white">About</a></li>
+          -->
+        </ul>
+
+        <!--
+        <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
+          <input type="search" class="form-control form-control-dark text-white bg-dark" placeholder="Search..." aria-label="Search">
+        </form>
+        -->
+        <div class="text-end">
+            <AuthorizeView>
+                <Authorized>
+                    <button type="button" class="btn btn-outline-light me-2">Выйти</button>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="login" type="button" class="btn btn-warning">Войти</a>
+                </NotAuthorized>
+            </AuthorizeView>
+          
         </div>
+      </div>
+  </header>
 
+<div class="page">
+    @switch (NavMenuShowFlag)
+    {
+        case true:
+            <NavMenuExpand  MenuItems="MenuItems" SelectedChange=selectedMenuItemChange/>
+            break;
+        case false:
+            <NavMenuCollapse MenuItems="MenuItems" SelectedChange=selectedMenuItemChange/>
+            break;
+    }
+    <div class="b-example-divider"></div>
+    <main>
         <article class="content px-4">
             @Body
         </article>
     </main>
 </div>
+
+@code{
+    private List<NavMenuItem> MenuItems = new List<NavMenuItem>
+    {
+        new NavMenuItem{Title="Заказы", ImgSrc="orders", Href="orderlist/1", isActive=true},
+        new NavMenuItem{Title="Импорт", ImgSrc="orders", Href="ImportExcel"},
+        new NavMenuItem{Title="Склад", ImgSrc="orders", Href="counter"},
+        new NavMenuItem{Title="Приходы", ImgSrc="orders", Href="arrivals"},
+        new NavMenuItem{Title="Типы дверей", ImgSrc="orders", Href="doortypes"},
+        new NavMenuItem{Title="Настройка списания", ImgSrc="orders", Href="settingwriteof"},
+        new NavMenuItem{Title="Пользователи", ImgSrc="orders", Href="users"},
+        new NavMenuItem{Title="Импорт", ImgSrc="orders", Href="ImportExcel"},
+        new NavMenuItem{Title="Импорт", ImgSrc="orders", Href="ImportExcel"}
+    };
+
+    private void selectedMenuItemChange(NavMenuItem clickItem)
+    {
+        var item = MenuItems.Where(i => i.isActive == true).FirstOrDefault();
+        if (item != null)
+            item.isActive = false;
+
+        clickItem.isActive = true;
+    }
+
+    private bool NavMenuShowFlag = true;
+    private void NavMenuShowing() => NavMenuShowFlag = !NavMenuShowFlag;
+}
