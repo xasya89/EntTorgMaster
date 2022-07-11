@@ -44,6 +44,7 @@
 <Table Responsive=true Bordered=true Narrow=true>
     <TableHeader>
         <TableRow>
+            <TableHeaderCell RowSpan=2></TableHeaderCell>
             <TableHeaderCell RowSpan=2>#</TableHeaderCell>
             <TableHeaderCell RowSpan=2>Наименование</TableHeaderCell>
             <TableHeaderCell RowSpan=2>Кол-во</TableHeaderCell>
@@ -75,6 +76,11 @@
         @foreach (OrderModelDoor door in order.OrderDoors)
         {
             <TableRow>
+                <TableRowCell>
+                    <Button Clicked=@(()=>RemoveRow(door)) Size=Size.Small Color=Color.Light>
+                        <Icon Name=IconName.Remove />
+                    </Button>
+                </TableRowCell>
                 <TableRowCell>@(door.Position)</TableRowCell>
                 <TableRowCell>
                     <Select TValue=string SelectedValue="@door.Name" @onchange="@((e)=> door.Name=(string)e.Value)">
@@ -259,6 +265,14 @@
         }
     }
 
+    private void RemoveRow(OrderModelDoor door)
+    {
+        order.OrderDoors.Remove(door);
+        int numpp=1;
+        foreach (var d in order.OrderDoors)
+            d.Position = numpp++;
+    }
+
     private async Task ImportFile(FileChangedEventArgs e)
     {
         var file=e.Files.FirstOrDefault();
@@ -284,6 +298,8 @@
                     int count = int.Parse(sheet.GetRow(r).GetCell(2).NumericCellValue.ToString());
                     int h = int.Parse(sheet.GetRow(r).GetCell(3).NumericCellValue.ToString());
                     int w = int.Parse(sheet.GetRow(r).GetCell(4).NumericCellValue.ToString());
+                    if (String.IsNullOrEmpty(doorName) & h == 0 & w == 0)
+                        break;
                     string openstr = sheet.GetRow(r).GetCell(5).StringCellValue;
                     OpenModelType open=OpenModelType.None;
                     if (openstr.ToLower().IndexOf("лев") > -1)
