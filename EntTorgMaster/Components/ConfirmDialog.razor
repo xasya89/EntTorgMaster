@@ -1,0 +1,37 @@
+﻿<Modal @ref="confirmModalRef">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>@Title</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            @Message
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideModal">Да</Button>
+            <Button Color="Color.Primary" Clicked="@HideModal">Нет</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "";
+    [Parameter]
+    public string Message { get; set; } = "";
+    [Parameter]
+    public EventCallback DialogOk{ get; set; }
+
+    private Modal confirmModalRef;
+
+    public Task ShowModal()
+    {
+        return confirmModalRef.Show();
+    }
+
+    private async Task HideModal()
+    {
+        await DialogOk.InvokeAsync();
+        await confirmModalRef.Hide();
+    }
+}

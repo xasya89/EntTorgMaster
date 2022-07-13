@@ -67,6 +67,8 @@
             <TableHeaderCell ColumnSpan=2>Навесы</TableHeaderCell>
             <TableHeaderCell ColumnSpan=2>Окно</TableHeaderCell>
             <TableHeaderCell ColumnSpan=2>Фрамуга</TableHeaderCell>
+            <TableHeaderCell ColumnSpan=2></TableHeaderCell>
+            <TableHeaderCell ColumnSpan=2></TableHeaderCell>
         </TableRow>
         <TableRow>
             <TableHeaderCell>Раб.</TableHeaderCell>
@@ -82,26 +84,9 @@
         {
             <TableRow Color=@(door.InEnterprise ? Color.Success : Color.Light)>
                 <TableRowCell>
-                    <Dropdown>
-                        <DropdownToggle Color="Color.Primary" Size=Size.Small>
-                            <Icon Name=IconName.Bars TextColor=TextColor.White/>
-                        </DropdownToggle>
-                        <DropdownMenu>
-                            <DropdownItem Clicked=@(()=>DeletePosition(door))>Удалить</DropdownItem>
-                            <DropdownDivider />
-                            <DropdownItem Clicked=@(()=>PrintOne(door))>Печать</DropdownItem>
-                            <DropdownItem Clicked=@(()=> specificationWriteofComponent.Open(door))>Спецификация</DropdownItem>
-                            <DropdownItem Clicked=@(()=>SendInEnterprise(door)) >
-                                @if(door.InEnterprise){
-                                    <span>Из производства</span>
-                                }
-                                else
-                                {
-                                    <span>В производство</span>
-                                }
-                             </DropdownItem>
-                        </DropdownMenu>
-                    </Dropdown>
+                    <Button Clicked=@(()=>DeletePosition(door)) Size=Size.Small Color=Color.Light>
+                        <Icon Name=IconName.Remove/>
+                    </Button>
                 </TableRowCell>
                 <TableRowCell>@(door.Position)</TableRowCell>
                 <TableRowCell>
@@ -196,6 +181,26 @@
                 </TableRowCell>
                 <TableRowCell>
                     <input @bind="door.FramugaH" disabled=@door.Framuga style="width: 50px"/>
+                </TableRowCell>
+                <TableRowCell>
+                    <Button Clicked=@(()=>SendInEnterprise(door)) Size=Size.Small Color=Color.Link>
+                        @if(door.InEnterprise){
+                            <span>Из произв</span>
+                        }
+                        else
+                        {
+                            <span>В произв</span>
+                        }
+                    </Button>
+                </TableRowCell>
+                <TableRowCell>
+                    <Button Clicked=@(()=> specificationWriteofComponent.Open(door)) Size=Size.Small Color=Color.Light>
+                        <Icon Name=IconName.LayerGroup/>
+                    </Button>
+                    <Span Style="width: 10px;"></Span>
+                    <Button Clicked=@(()=>PrintOne(door)) Size=Size.Small Color=Color.Light>
+                        <Icon Name=IconName.Print/>
+                    </Button>
                 </TableRowCell>
             </TableRow>
         }
