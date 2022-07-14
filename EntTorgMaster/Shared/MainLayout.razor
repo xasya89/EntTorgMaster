@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@using EntTorgMaster.Infrastructure
+@inject ILocalStorageService localStorage
 
 <PageTitle>EntTorgMaster</PageTitle>
 
@@ -31,7 +33,7 @@
         <div class="text-end">
             <AuthorizeView>
                 <Authorized>
-                    <button type="button" class="btn btn-outline-light me-2">Выйти</button>
+                    <a href="logout" class="btn btn-outline-light me-2">Выйти</a>
                 </Authorized>
                 <NotAuthorized>
                     <a href="login" type="button" class="btn btn-warning">Войти</a>
@@ -61,17 +63,23 @@
 </div>
 
 @code{
+    protected override async Task OnInitializedAsync()
+    {
+        string showMenuFlagStr = await localStorage.GetStringAsync("ShowMenu");
+        bool.TryParse(showMenuFlagStr, out NavMenuShowFlag);
+        await base.OnInitializedAsync();
+    }
+
     private List<NavMenuItem> MenuItems = new List<NavMenuItem>
     {
         new NavMenuItem{Title="Заказы", ImgSrc="orders", Href="orderlist/1", isActive=true},
-        new NavMenuItem{Title="Импорт", ImgSrc="orders", Href="ImportExcel"},
-        new NavMenuItem{Title="Склад", ImgSrc="orders", Href="stockroom"},
-        new NavMenuItem{Title="Приходы", ImgSrc="orders", Href="arrivals"},
-        new NavMenuItem{Title="Типы дверей", ImgSrc="orders", Href="doortypes"},
+        new NavMenuItem{Title="Импорт", ImgSrc="import", Href="ImportExcel"},
+        new NavMenuItem{Title="Склад", ImgSrc="warehouse", Href="stockroom"},
+        new NavMenuItem{Title="Приходы", ImgSrc="arrivals", Href="arrivals"},
+        new NavMenuItem{Title="Типы дверей", ImgSrc="doors", Href="doortypes"},
         new NavMenuItem{Title="Настройка списания", ImgSrc="orders", Href="settingwriteof"},
-        new NavMenuItem{Title="Пользователи", ImgSrc="orders", Href="users"},
-        new NavMenuItem{Title="Импорт", ImgSrc="orders", Href="ImportExcel"},
-        new NavMenuItem{Title="Импорт", ImgSrc="orders", Href="ImportExcel"}
+        new NavMenuItem{Title="Пользователи", ImgSrc="users", Href="users"},
+        new NavMenuItem{Title="Выход", ImgSrc="logout", Href="logout"}
     };
 
     private void selectedMenuItemChange(NavMenuItem clickItem)
@@ -84,5 +92,11 @@
     }
 
     private bool NavMenuShowFlag = true;
-    private void NavMenuShowing() => NavMenuShowFlag = !NavMenuShowFlag;
+    private void NavMenuShowing() 
+    {
+        NavMenuShowFlag = !NavMenuShowFlag;
+        localStorage.SetStringAsync("ShowMenu", NavMenuShowFlag.ToString());
+    }
+
+
 }

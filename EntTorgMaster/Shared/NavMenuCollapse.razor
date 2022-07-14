@@ -17,20 +17,27 @@
                         case true:
                               <li class="nav-item">
                                 <a href="@menuItem.Href" onclick=@(()=>SelectedChange.InvokeAsync(menuItem)) class="nav-link active py-3 border-bottom" aria-current="page" title="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="@menuItem.Title">
-                                  <img src="/img/@(menuItem.ImgSrc).svg"/>
+                                  <img src="/img/@(menuItem.ImgSrc)-primary.svg"/>
                                 </a>
                               </li>
                             break;
                         case false:
                             <li>
                                 <a href="@menuItem.Href" onclick=@(()=>SelectedChange.InvokeAsync(menuItem)) class="nav-link py-3 border-bottom" title="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Dashboard">
-                                    <img src="/img/@(menuItem.ImgSrc)-primary.svg"  data-bs-toggle="tooltip" data-bs-placement="right" title="@menuItem.Title"/>
+                                    <img src="/img/@(menuItem.ImgSrc).svg"  data-bs-toggle="tooltip" data-bs-placement="right" title="@menuItem.Title"/>
                                 </a>
                             </li>
                             break;
                     }
                 }
             </Authorized>
+            <NotAuthorized>
+                <li>
+                    <a href="login" class="nav-link py-3 border-bottom" title="" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-original-title="Dashboard">
+                        <Icon Name=IconName.User />
+                    </a>
+                </li>
+            </NotAuthorized>
         </AuthorizeView>
     </ul>
   </div>

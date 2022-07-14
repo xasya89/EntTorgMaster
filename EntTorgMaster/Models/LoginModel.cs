@@ -47,6 +47,12 @@ namespace EntTorgMaster.Models
                 NavigationManager.NavigateTo("/", true);
             }
         }
+
+        protected async Task LogoutAsync()
+        {
+            await LocalStorageService.RemoveAsync(nameof(SecurityToken));
+            NavigationManager.NavigateTo("/", true);
+        }
     }
 
     public class LoginViewModel
